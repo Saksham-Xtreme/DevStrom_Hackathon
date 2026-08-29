@@ -5,7 +5,8 @@ const resolveBackendUrl = () => {
 
 export function startGoogleAuth(mode = 'login') {
   const backendUrl = resolveBackendUrl();
-  const googleAuthUrl = `${backendUrl}/api/auth/google`;
+  const clientUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5174';
+  const googleAuthUrl = `${backendUrl}/api/auth/google?client_url=${encodeURIComponent(clientUrl)}`;
 
   if (typeof window !== 'undefined') {
     window.location.href = googleAuthUrl;

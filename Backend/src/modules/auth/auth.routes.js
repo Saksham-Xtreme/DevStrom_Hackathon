@@ -15,8 +15,9 @@ router.get(
     "/google/callback",
     googleCallback,
     (req, res) => {
-        const clientUrl = process.env.CLIENT_URL || "http://localhost:5174";
-        res.redirect(`${clientUrl}/dashboard?oauth_success=true`);
+        const clientUrl = req.query.state || process.env.CLIENT_URL || "http://localhost:5174";
+        const sanitizedClientUrl = clientUrl.replace(/\/$/, "");
+        res.redirect(`${sanitizedClientUrl}/dashboard?oauth_success=true`);
     }
 );
 
