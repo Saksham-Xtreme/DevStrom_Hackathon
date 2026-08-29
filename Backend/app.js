@@ -16,9 +16,8 @@ app.use(
 app.use(passport.initialize());
 
 app.use(helmet());
-app.use("/api/auth", authRoutes);
-
 app.use(express.json());
+app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
     res.json({

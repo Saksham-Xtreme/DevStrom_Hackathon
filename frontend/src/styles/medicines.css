@@ -1,0 +1,396 @@
+/* Medicines Page Styles */
+.meds-page-container {
+  padding: 24px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: var(--font-sans);
+}
+
+.meds-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.meds-page-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+  color: var(--text-primary);
+}
+
+.meds-page-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.meds-controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.meds-search-input {
+  flex: 1;
+  min-width: 240px;
+  max-width: 360px;
+  padding: 10px 16px 10px 38px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #ffffff;
+  font-size: 14px;
+}
+
+.meds-filter-pills {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.filter-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
+.filter-pill.active {
+  background: var(--green-primary);
+  color: #ffffff;
+  border-color: var(--green-primary);
+}
+
+/* Medicines Grid */
+.meds-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.med-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.med-card:hover {
+  border-color: rgba(47, 143, 112, 0.3);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.med-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.med-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  background: var(--green-light);
+  color: var(--green-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.med-card-name {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: var(--text-primary);
+}
+
+.med-card-generic {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.med-card-badge-row {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.med-strength-tag {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  background: #f1f5f3;
+  color: var(--text-primary);
+  border-radius: 6px;
+}
+
+.expiry-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.expiry-tag--valid {
+  background: rgba(47, 143, 112, 0.12);
+  color: var(--status-taken);
+}
+
+.expiry-tag--approaching {
+  background: rgba(59, 130, 160, 0.12);
+  color: var(--status-upcoming);
+}
+
+.expiry-tag--expiring_soon {
+  background: rgba(217, 154, 61, 0.15);
+  color: var(--status-expiring);
+  font-weight: 700;
+}
+
+.expiry-tag--expired {
+  background: rgba(217, 92, 92, 0.15);
+  color: var(--status-missed);
+  font-weight: 700;
+}
+
+.med-card-info-list {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.med-card-timing-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.timing-pill {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--green-light);
+  color: var(--green-dark);
+}
+
+.med-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+  margin-top: auto;
+}
+
+/* Add/Edit Medicine Modal */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 43, 36, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-box {
+  background: #ffffff;
+  width: 100%;
+  max-width: 540px;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 28px;
+  box-sizing: border-box;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.modal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 500px) {
+  .modal-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-full-width {
+  grid-column: 1 / -1;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Reminders Timeline Page */
+.reminders-container {
+  padding: 24px 32px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.reminder-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.reminder-timeline-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: all 0.2s ease;
+}
+
+.reminder-timeline-card:hover {
+  box-shadow: var(--shadow-sm);
+  border-color: rgba(47, 143, 112, 0.3);
+}
+
+.reminder-time-badge {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green-primary);
+  min-width: 76px;
+}
+
+.reminder-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.reminder-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.reminder-title.is-complete {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+
+.reminder-strength {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.reminder-instructions {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.reminder-status-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.reminders-empty-state {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.reminders-empty-state h3 {
+  margin: 12px 0 6px;
+  color: var(--text-primary);
+}
+
+.reminders-empty-state p {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .reminders-container,
+  .meds-page-container {
+    padding: 20px 16px;
+  }
+
+  .reminder-timeline-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .reminder-status-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+}

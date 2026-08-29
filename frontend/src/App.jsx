@@ -1,37 +1,133 @@
-import { useState } from 'react'
-import './App.css'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import OnboardingFlow from './pages/OnboardingFlow';
+import Dashboard from './pages/Dashboard';
+import Medicines from './pages/Medicines';
+import Reminders from './pages/Reminders';
+import Adherence from './pages/Adherence';
+import Caregivers from './pages/Caregivers';
+import UploadPrescription from './pages/UploadPrescription';
 
-function App() {
-  const [message, setMessage] = useState('')
-  const [loading, setLoading] = useState(false)
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useAuth();
 
-  const checkBackend = async () => {
-    setLoading(true)
-
-    try {
-      const response = await fetch('http://localhost:8080/')
-      const data = await response.json()
-
-      setMessage(data.message)
-    } catch (error) {
-      console.error('Backend error:', error)
-      setMessage('Could not connect to backend')
-    }
-
-    setLoading(false)
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
-  return (
-    <div>
-      <h1>DevStrom</h1>
-
-      <button onClick={checkBackend}>
-        {loading ? 'Connecting...' : 'Check Backend'}
-      </button>
-
-      {message && <p>{message}</p>}
-    </div>
-  )
+  return children;
 }
 
-export default App
+function PublicRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
+}
+
+function AppRoutes() {
+  const { isAuthenticated, hasCompletedOnboarding } = useAuth();
+
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <Navigate
+            to={
+              isAuthenticated
+                ? hasCompletedOnboarding
+                  ? '/dashboard'
+                  : '/onboarding'
+                : '/login'
+            }
+            replace
+          />
+        }
+      />
+
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+
+      <Route
+        path="/onboarding"
+        element={
+          <ProtectedRoute>
+            <OnboardingFlow />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/medicines"
+        element={
+          <ProtectedRoute>
+            <Medicines />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/reminders"
+        element={
+          <ProtectedRoute>
+            <Reminders />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/adherence"
+        element={
+          <ProtectedRoute>
+            <Adherence />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/caregivers"
+        element={
+          <ProtectedRoute>
+            <Caregivers />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/upload-prescription"
+        element={
+          <ProtectedRoute>
+            <UploadPrescription />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}

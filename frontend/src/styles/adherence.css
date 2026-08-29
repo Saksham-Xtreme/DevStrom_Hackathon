@@ -1,0 +1,249 @@
+.insights-page {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px 32px;
+}
+
+.insights-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.insights-title {
+  margin: 0 0 4px;
+  color: var(--text-primary);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.insights-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.insight-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.insight-stat-card {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.insight-stat-card span {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.insight-stat-card strong {
+  display: block;
+  margin: 6px 0 2px;
+  color: var(--text-primary);
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+.insight-stat-card p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.insight-main-grid,
+.caregiver-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+
+.dose-history-card,
+.missed-summary-card,
+.caregiver-alert-card {
+  padding: 20px;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.history-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.history-header span {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.history-list,
+.missed-list,
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-row,
+.missed-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fbfdfc;
+}
+
+.history-row h3,
+.missed-row h3 {
+  margin: 2px 0;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.history-row p,
+.missed-row p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.history-time {
+  color: var(--green-dark);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.empty-copy {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.caregiver-profile-band {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.caregiver-profile-avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--green-light);
+  color: var(--green-dark);
+  font-weight: 800;
+}
+
+.caregiver-profile-band h2 {
+  margin: 2px 0;
+  font-size: 20px;
+  color: var(--text-primary);
+}
+
+.caregiver-profile-band p,
+.caregiver-kicker {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.caregiver-kicker {
+  font-weight: 800;
+}
+
+.caregiver-patient-chip {
+  margin-left: auto;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: #f1f5f3;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.care-alert {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: #fbfdfc;
+}
+
+.care-alert h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+
+.care-alert p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.care-alert--critical {
+  border-color: rgba(217, 92, 92, 0.25);
+  background: rgba(217, 92, 92, 0.08);
+}
+
+.care-alert--warning {
+  border-color: rgba(217, 154, 61, 0.28);
+  background: rgba(217, 154, 61, 0.1);
+}
+
+.care-alert--stable {
+  border-color: rgba(47, 143, 112, 0.22);
+  background: rgba(47, 143, 112, 0.08);
+}
+
+@media (max-width: 860px) {
+  .insights-page {
+    padding: 20px 16px;
+  }
+
+  .insight-stat-grid,
+  .insight-main-grid,
+  .caregiver-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .caregiver-profile-band {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .caregiver-patient-chip {
+    margin-left: 0;
+  }
+}
