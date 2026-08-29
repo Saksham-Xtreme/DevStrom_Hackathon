@@ -12,9 +12,9 @@ const routeByNavId = {
   reminders: '/reminders',
   adherence: '/adherence',
   caregivers: '/caregivers',
-  reports: '/adherence',
+  reports: '/reports',
   prescriptions: '/upload-prescription',
-  settings: '/caregivers',
+  settings: '/settings',
 };
 
 function Sidebar({ activeNav, onNavChange }) {

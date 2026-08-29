@@ -9,6 +9,7 @@ import Reminders from './pages/Reminders';
 import Adherence from './pages/Adherence';
 import Caregivers from './pages/Caregivers';
 import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 import UploadPrescription from './pages/UploadPrescription';
 
 function ProtectedRoute({ children }) {
@@ -105,6 +106,24 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Caregivers />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         }
       />
