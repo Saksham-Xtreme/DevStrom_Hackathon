@@ -1,6 +1,7 @@
 export const user = {
-  name: 'Ansh Kumar',
-  greeting: 'Ansh',
+  name: 'Hem Ranjan',
+  greeting: 'Hem',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
 };
 
 export const navItems = [
@@ -29,13 +30,15 @@ export const stats = [
     value: 3,
     subtitle: 'Upcoming doses',
     tone: 'primary',
+    icon: 'calendar',
   },
   {
     id: 'taken',
     label: 'Taken',
-    value: 2,
+    value: 3,
     subtitle: 'Doses completed',
     tone: 'taken',
+    icon: 'check',
   },
   {
     id: 'missed',
@@ -43,6 +46,7 @@ export const stats = [
     value: 0,
     subtitle: 'Doses missed',
     tone: 'missed',
+    icon: 'cross',
   },
   {
     id: 'adherence',
@@ -50,6 +54,8 @@ export const stats = [
     value: '95%',
     subtitle: 'This week',
     tone: 'adherence',
+    icon: 'link',
+    hasSparkline: true,
   },
 ];
 
@@ -59,34 +65,34 @@ export const initialSchedule = [
     time: '8:00 AM',
     name: 'Multivitamin',
     strength: '',
-    instructions: 'After breakfast',
+    instructions: 'After Breakfast',
     status: 'taken',
   },
   {
     id: 2,
     time: '1:30 PM',
-    name: 'Calcium',
-    strength: '500 mg',
-    instructions: 'After lunch',
+    name: 'Calcium 500mg',
+    strength: '',
+    instructions: 'After Lunch',
     status: 'taken',
   },
   {
     id: 3,
     time: '8:30 PM',
-    name: 'Magnesium',
-    strength: '250 mg',
-    instructions: 'After dinner',
-    status: 'upcoming',
+    name: 'Magnesium 250mg',
+    strength: '',
+    instructions: 'After Dinner',
+    status: 'taken',
   },
 ];
 
 export const adherenceData = [
-  { day: 'Mon', value: 100 },
-  { day: 'Tue', value: 100 },
-  { day: 'Wed', value: 80 },
-  { day: 'Thu', value: 100 },
-  { day: 'Fri', value: 100 },
-  { day: 'Sat', value: 90 },
+  { day: 'Mon', value: 80 },
+  { day: 'Tue', value: 90 },
+  { day: 'Wed', value: 85 },
+  { day: 'Thu', value: 95 },
+  { day: 'Fri', value: 90 },
+  { day: 'Sat', value: 95 },
   { day: 'Sun', value: 95 },
 ];
 
@@ -94,12 +100,18 @@ export const caregiver = {
   name: 'Ravi Kumar',
   relation: 'Son',
   status: 'Connected',
+  avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80',
+};
+
+export const nextRefill = {
+  name: 'Magnesium 250mg',
+  daysLeft: '7 days left',
 };
 
 export const expiryAlert = {
-  name: 'Atorvastatin',
-  strength: '10 mg',
-  daysLeft: 5,
+  name: 'Magnesium 250mg',
+  strength: '',
+  daysLeft: 7,
 };
 
 export const healthTip = {
@@ -111,7 +123,7 @@ export const notifications = [
   {
     id: 1,
     title: 'Upcoming dose',
-    message: 'Magnesium 250 mg is scheduled for 8:30 PM.',
+    message: 'Magnesium 250mg is scheduled for 8:30 PM.',
     time: '2h ago',
     unread: true,
   },
@@ -125,8 +137,9 @@ export const notifications = [
   {
     id: 3,
     title: 'Refill reminder',
-    message: 'Atorvastatin expires in 5 days.',
+    message: 'Magnesium 250mg refilling in 7 days.',
     time: '2d ago',
     unread: false,
   },
 ];
+

@@ -22,46 +22,89 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const saveState = (auth, onboard) => {
-    localStorage.setItem('meditrack_auth', JSON.stringify({
-      isAuthenticated: auth,
-      hasCompletedOnboarding: onboard
-    }));
+  const [user, setUser] = useState(() => {
+    try {
+      const authState = localStorage.getItem('meditrack_auth');
+      return authState && JSON.parse(authState).user
+        ? JSON.parse(authState).user
+        : {
+            name: 'Hem Ranjan',
+            greeting: 'Hem',
+            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+            email: 'hem.ranjan@example.com',
+          };
+    } catch {
+      return {
+        name: 'Hem Ranjan',
+        greeting: 'Hem',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+        email: 'hem.ranjan@example.com',
+      };
+    }
+  });
+
+  const saveState = (auth, onboard, userData) => {
+    localStorage.setItem(
+      'meditrack_auth',
+      JSON.stringify({
+        isAuthenticated: auth,
+        hasCompletedOnboarding: onboard,
+        user: userData || user,
+      })
+    );
   };
 
-  const login = () => {
+  const login = (userData) => {
     setIsAuthenticated(true);
-    // Assume returning users have completed onboarding
     setHasCompletedOnboarding(true);
-    saveState(true, true);
+    if (userData) {
+      setUser(userData);
+      saveState(true, true, userData);
+    } else {
+      saveState(true, true, user);
+    }
   };
 
-  const signup = () => {
+  const signup = (userData) => {
     setIsAuthenticated(true);
     setHasCompletedOnboarding(false);
-    saveState(true, false);
+    if (userData) {
+      setUser(userData);
+      saveState(true, false, userData);
+    } else {
+      saveState(true, false, user);
+    }
   };
 
   const completeOnboarding = () => {
     setHasCompletedOnboarding(true);
-    saveState(true, true);
+    saveState(true, true, user);
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     setHasCompletedOnboarding(false);
+    setUser({
+      name: 'Hem Ranjan',
+      greeting: 'Hem',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+      email: 'hem.ranjan@example.com',
+    });
     localStorage.removeItem('meditrack_auth');
   };
 
   return (
-    <AuthContext.Provider value={{
-      isAuthenticated,
-      hasCompletedOnboarding,
-      login,
-      signup,
-      completeOnboarding,
-      logout
-    }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        hasCompletedOnboarding,
+        user,
+        login,
+        signup,
+        completeOnboarding,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

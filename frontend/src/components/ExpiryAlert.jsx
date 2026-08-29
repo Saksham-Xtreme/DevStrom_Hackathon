@@ -14,7 +14,8 @@ function ExpiryAlert({ alert, onViewMedicine }) {
     );
   }
 
-  const displayName = `${alert.name} ${alert.strength}`;
+  const displayName = `${alert.name ?? 'Medicine'} ${alert.strength ?? ''}`.trim();
+  const expiryLabel = alert.expiry?.label ?? alert.daysLeft ?? 'No expiry status';
 
   return (
     <section className="card expiry-alert" aria-labelledby="expiry-title">
@@ -23,7 +24,7 @@ function ExpiryAlert({ alert, onViewMedicine }) {
         <span id="expiry-title">Medicine Expiring Soon</span>
       </div>
       <h3 className="expiry-alert__name">{displayName}</h3>
-      <p className="expiry-alert__meta">{alert.expiry.label}</p>
+      <p className="expiry-alert__meta">{expiryLabel}</p>
       <button type="button" className="btn btn-ghost btn-sm" onClick={onViewMedicine}>
         View Medicine
       </button>

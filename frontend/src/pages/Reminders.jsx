@@ -24,7 +24,7 @@ function Reminders() {
   };
 
   return (
-    <>
+    <div className="app-shell">
       <Sidebar activeNav="reminders" />
 
       <div className="main-area">
@@ -58,46 +58,41 @@ function Reminders() {
                       <div>
                         <h3 className={reminder.status === 'taken' ? 'reminder-title is-complete' : 'reminder-title'}>
                           {reminder.name}{' '}
-                          {reminder.strength && (
-                            <span className="reminder-strength">({reminder.strength})</span>
-                          )}
+                          {reminder.strength ? <span className="reminder-strength">({reminder.strength})</span> : null}
                         </h3>
-                        <p className="reminder-instructions">
-                          {reminder.dose} - {reminder.instructions}
-                        </p>
+
+                        <p className="reminder-instructions">{reminder.instructions || 'Daily dose'}</p>
                       </div>
                     </div>
 
-                    <div className="reminder-status-actions">
-                      {reminder.status === 'upcoming' ? (
-                        <>
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-sm"
-                            onClick={() => handleUpdateStatus(reminder.id, 'missed')}
-                          >
-                            Missed
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => handleUpdateStatus(reminder.id, 'skipped')}
-                          >
-                            Skip
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-primary btn-sm"
-                            onClick={() => handleUpdateStatus(reminder.id, 'taken')}
-                          >
-                            Take Dose
-                          </button>
-                        </>
-                      ) : (
-                        <span className={`status-badge status-badge--${reminder.status}`}>
-                          {statusLabels[reminder.status]}
-                        </span>
-                      )}
+                    <div className="reminder-actions-row">
+                      <span className={`status-badge status-badge--${reminder.status || 'upcoming'}`}>
+                        {statusLabels[reminder.status] || 'Upcoming'}
+                      </span>
+
+                      <div className="reminder-btn-group">
+                        <button
+                          type="button"
+                          className={reminder.status === 'taken' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'}
+                          onClick={() => handleUpdateStatus(reminder.id, 'taken')}
+                        >
+                          Taken
+                        </button>
+                        <button
+                          type="button"
+                          className={reminder.status === 'skipped' ? 'btn btn-secondary btn-sm' : 'btn btn-ghost btn-sm'}
+                          onClick={() => handleUpdateStatus(reminder.id, 'skipped')}
+                        >
+                          Skipped
+                        </button>
+                        <button
+                          type="button"
+                          className={reminder.status === 'missed' ? 'btn btn-ghost btn-sm is-missed' : 'btn btn-ghost btn-sm'}
+                          onClick={() => handleUpdateStatus(reminder.id, 'missed')}
+                        >
+                          Missed
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -108,7 +103,7 @@ function Reminders() {
       </div>
 
       <MobileNav activeNav="reminders" />
-    </>
+    </div>
   );
 }
 

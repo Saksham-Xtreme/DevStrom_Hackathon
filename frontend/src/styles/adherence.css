@@ -247,3 +247,77 @@
     margin-left: 0;
   }
 }
+
+/* Adherence Chart Component Styles */
+.adherence-card {
+  padding: 24px;
+}
+
+.adherence-card__title {
+  margin: 0 0 16px;
+  font-size: 18px;
+  color: var(--text-primary);
+}
+
+.adherence-card__header {
+  margin-bottom: 24px;
+}
+
+.adherence-card__score {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--green-primary);
+  margin: 0;
+  line-height: 1;
+}
+
+.adherence-card__period {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 4px 0 0;
+}
+
+.adherence-chart {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 200px;
+  padding-top: 10px;
+  margin-top: 16px;
+  gap: 8px;
+}
+
+.adherence-chart__bar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  height: 100%;
+}
+
+.adherence-chart__bar-track {
+  width: 12px;
+  height: calc(100% - 24px);
+  background: var(--green-light);
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.adherence-chart__bar {
+  width: 100%;
+  background: linear-gradient(180deg, var(--green-primary), var(--green-dark));
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  border-radius: 6px;
+  transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.adherence-chart__label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+

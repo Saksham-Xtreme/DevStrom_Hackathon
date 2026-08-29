@@ -58,7 +58,7 @@ function Medicines() {
   };
 
   return (
-    <>
+    <div className="app-shell">
       <Sidebar activeNav="medicines" />
 
       <div className="main-area">
@@ -68,7 +68,7 @@ function Medicines() {
               <div>
                 <h1 className="meds-page-title">Medication Management</h1>
                 <p className="meds-page-subtitle">
-                  View, track, and manage all your active and upcoming prescriptions.
+                  Manage your prescription schedules, dosages, and expiry alerts
                 </p>
               </div>
 
@@ -80,43 +80,33 @@ function Medicines() {
                   setIsModalOpen(true);
                 }}
               >
-                <Icon name="plus" />
-                Add Medicine
+                <Icon name="plus" /> Add Medication
               </button>
             </div>
 
-            <div className="meds-controls-bar">
-              <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
-                <Icon
-                  name="search"
-                  style={{
-                    position: 'absolute',
-                    left: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: 'var(--text-secondary)',
-                  }}
-                />
+            <div className="meds-controls-row">
+              <div className="meds-search-input-wrap">
+                <Icon name="search" className="meds-search-icon" />
                 <input
-                  type="search"
+                  type="text"
                   className="meds-search-input"
-                  placeholder="Search by name or generic..."
+                  placeholder="Search medications..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
 
-              <div className="meds-filter-pills">
+              <div className="meds-filter-tabs">
                 <button
                   type="button"
-                  className={`filter-pill ${filter === 'all' ? 'active' : ''}`}
+                  className={`filter-tab ${filter === 'all' ? 'active' : ''}`}
                   onClick={() => setFilter('all')}
                 >
                   All ({medicines.length})
                 </button>
                 <button
                   type="button"
-                  className={`filter-pill ${
+                  className={`filter-tab ${
                     filter === 'expiring' ? 'active' : ''
                   }`}
                   onClick={() => setFilter('expiring')}
@@ -125,7 +115,7 @@ function Medicines() {
                 </button>
                 <button
                   type="button"
-                  className={`filter-pill ${
+                  className={`filter-tab ${
                     filter === 'expired' ? 'active' : ''
                   }`}
                   onClick={() => setFilter('expired')}
@@ -136,15 +126,7 @@ function Medicines() {
             </div>
 
             {filteredMedicines.length === 0 ? (
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '60px 20px',
-                  background: '#ffffff',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border)',
-                }}
-              >
+              <div className="meds-empty-state card">
                 <Icon
                   name="pill"
                   style={{ fontSize: '32px', color: 'var(--text-secondary)' }}
@@ -182,7 +164,7 @@ function Medicines() {
         onSave={handleSaveMed}
         initialData={editingMed}
       />
-    </>
+    </div>
   );
 }
 

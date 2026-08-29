@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav';
-import { caregiver, user } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { caregiver } from '../data/mockData';
 import {
   getCaregiverAlerts,
   getDoseActivity,
@@ -11,13 +12,14 @@ import {
 import '../styles/adherence.css';
 
 function Caregivers() {
+  const { user } = useAuth();
   const weekly = useMemo(() => getWeeklyAdherenceSummary(), []);
   const alerts = useMemo(() => getCaregiverAlerts(), []);
   const activity = useMemo(() => getDoseActivity(8), []);
   const expiryAlerts = useMemo(() => getExpiryAlerts(3), []);
 
   return (
-    <>
+    <div className="app-shell">
       <Sidebar activeNav="caregivers" />
 
       <div className="main-area">
@@ -46,7 +48,7 @@ function Caregivers() {
                 <p>{caregiver.relation} - {caregiver.status}</p>
               </div>
               <div className="caregiver-patient-chip">
-                Patient: {user.name}
+                Patient: {user?.name || 'Hem Ranjan'}
               </div>
             </section>
 
@@ -125,7 +127,7 @@ function Caregivers() {
       </div>
 
       <MobileNav activeNav="caregivers" />
-    </>
+    </div>
   );
 }
 
