@@ -7,6 +7,7 @@ const helmet = require("helmet");
 const passport = require("./src/config/passport");
 const authRoutes = require("./src/modules/auth/auth.routes");
 const cronRoutes = require("./src/modules/cron/cron.routes");
+const medicineRoutes = require("./src/modules/medicines/medicine.routes");
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/cron", cronRoutes);
+app.use("/api/medicines", medicineRoutes);
 
 app.get("/", (req, res) => {
     res.json({

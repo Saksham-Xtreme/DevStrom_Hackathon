@@ -2,6 +2,13 @@ const mongoose = require("mongoose");
 
 const medicationScheduleSchema = new mongoose.Schema(
     {
+        userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+            index: true,
+        },
+
         medicineId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Medicine",
@@ -42,9 +49,4 @@ const medicationScheduleSchema = new mongoose.Schema(
     {
         timestamps: true,
     }
-);
-
-module.exports = mongoose.model(
-    "MedicationSchedule",
-    medicationScheduleSchema
 );

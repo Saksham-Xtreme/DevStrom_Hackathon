@@ -26,6 +26,19 @@ client.interceptors.request.use(
   }
 );
 
+export const medicineApi = {
+  search: (query, limit = 10) =>
+    client.get('/api/medicines/search', {
+      params: {
+        q: query,
+        limit,
+      },
+    }),
+
+  getDrugDetails: (sctId) =>
+    client.get(`/api/medicines/drug/${sctId}`),
+};
+
 // Response Interceptor: Globally handle authentication errors (e.g. 401 token expired)
 client.interceptors.response.use(
   (response) => response.data,
@@ -44,17 +57,23 @@ export const authApi = {
   // Check if backend is alive
   checkHealth: () => client.get('/'),
 
-  // Get Google OAuth Redirection URL
+  // Google OAuth URL
   getGoogleLoginUrl: () => `${API_BASE_URL}/api/auth/google`,
 
-  // Standard Login (Planned)
-  login: (email, password) => client.post('/api/auth/login', { email, password }),
+  // Get the currently authenticated MongoDB user
+  getCurrentUser: () => client.get('/api/auth/me'),
 
-  // Send OTP (Planned)
-  sendOtp: (email) => client.post('/api/auth/send-otp', { email }),
+  // Email/password login - future
+  login: (email, password) =>
+    client.post('/api/auth/login', { email, password }),
 
-  // Verify OTP (Planned)
-  verifyOtp: (email, otp) => client.post('/api/auth/verify-otp', { email, otp }),
+  // OTP - future
+  sendOtp: (email) =>
+    client.post('/api/auth/send-otp', { email }),
+
+  // OTP verification - future
+  verifyOtp: (email, otp) =>
+    client.post('/api/auth/verify-otp', { email, otp }),
 };
 
 // Prescription endpoints helper (Planned)

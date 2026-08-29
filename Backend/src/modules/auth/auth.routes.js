@@ -2,31 +2,48 @@ const express = require("express");
 
 const {
     googleAuth,
-    googleCallback
+    googleCallback: passportGoogleCallback,
 } = require("../../middleware/passport.middleware");
+
+const {
+    getCurrentUser,
+    googleCallback,
+} = require("./auth.controller");
+
+const authMiddleware = require("../../middleware/auth.middleware");
 
 const router = express.Router();
 
-// Start Google OAuth
-router.get("/google", googleAuth);
+router.get("/google", (req, res, next) => {
+    console.log("\n🚀 GOOGLE LOGIN STARTED");
+    console.log("Request URL:", req.originalUrl);
+    console.log("Client URL:", req.query.client_url);
 
-// Google OAuth callback
-router.get(
-    "/google/callback",
-    googleCallback,
-    (req, res) => {
-        const clientUrl = req.query.state || process.env.CLIENT_URL || "http://localhost:5174";
-        const sanitizedClientUrl = clientUrl.replace(/\/$/, "");
-        res.redirect(`${sanitizedClientUrl}/dashboard?oauth_success=true`);
-    }
-);
+    next();
+}, googleAuth);
+
+
+router.get("/google/callback", (req, res, next) => {
+    console.log("\n🔄 GOOGLE CALLBACK HIT");
+    console.log("Callback URL:", req.originalUrl);
+    console.log("Query params:", req.query);
+
+    next();
+}, googleCallback);
 
 // OAuth failure
 router.get("/login-failed", (req, res) => {
     res.status(401).json({
         success: false,
-        message: "Google authentication failed"
+        message: "Google authentication failed",
     });
 });
+
+// Current authenticated user
+router.get(
+    "/me",
+    authMiddleware,
+    getCurrentUser
+);
 
 module.exports = router;

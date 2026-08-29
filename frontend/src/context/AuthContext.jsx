@@ -1,112 +1,92 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
-const AuthContext = createContext();
+import { authApi } from '../api/client';
+
+const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    try {
-      if (typeof window !== 'undefined') {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        // Check if Google OAuth returned a JWT
         const params = new URLSearchParams(window.location.search);
-        if (params.get('oauth_success') === 'true') {
-          localStorage.setItem('meditrack_auth', JSON.stringify({
-            isAuthenticated: true,
-            hasCompletedOnboarding: true
-          }));
-          return true;
+        const token = params.get('token');
+
+        if (token) {
+          localStorage.setItem('token', token);
+
+          // Remove token from URL after saving it
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+          );
         }
-      }
-      const authState = localStorage.getItem('meditrack_auth');
-      return authState ? JSON.parse(authState).isAuthenticated : false;
-    } catch {
-      return false;
-    }
-  });
 
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
-    try {
-      if (typeof window !== 'undefined') {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('oauth_success') === 'true') {
-          return true;
+        const savedToken = localStorage.getItem('token');
+
+        // No token means the user is not logged in
+        if (!savedToken) {
+          setLoading(false);
+          return;
         }
+
+        // Ask backend for the actual logged-in user
+        const response = await authApi.getCurrentUser();
+
+        setUser(response.user);
+        setIsAuthenticated(true);
+        setHasCompletedOnboarding(true);
+      } catch (error) {
+        console.error('Authentication initialization failed:', error);
+
+        // Invalid/expired token
+        localStorage.removeItem('token');
+
+        setUser(null);
+        setIsAuthenticated(false);
+        setHasCompletedOnboarding(false);
+      } finally {
+        setLoading(false);
       }
-      const authState = localStorage.getItem('meditrack_auth');
-      return authState ? JSON.parse(authState).hasCompletedOnboarding : false;
-    } catch {
-      return false;
-    }
-  });
+    };
 
-  const [user, setUser] = useState(() => {
-    try {
-      const authState = localStorage.getItem('meditrack_auth');
-      return authState && JSON.parse(authState).user
-        ? JSON.parse(authState).user
-        : {
-            name: 'Hem Ranjan',
-            greeting: 'Hem',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-            email: 'hem.ranjan@example.com',
-          };
-    } catch {
-      return {
-        name: 'Hem Ranjan',
-        greeting: 'Hem',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-        email: 'hem.ranjan@example.com',
-      };
-    }
-  });
-
-  const saveState = (auth, onboard, userData) => {
-    localStorage.setItem(
-      'meditrack_auth',
-      JSON.stringify({
-        isAuthenticated: auth,
-        hasCompletedOnboarding: onboard,
-        user: userData || user,
-      })
-    );
-  };
+    initializeAuth();
+  }, []);
 
   const login = (userData) => {
+    setUser(userData);
     setIsAuthenticated(true);
     setHasCompletedOnboarding(true);
-    if (userData) {
-      setUser(userData);
-      saveState(true, true, userData);
-    } else {
-      saveState(true, true, user);
-    }
   };
 
   const signup = (userData) => {
+    setUser(userData);
     setIsAuthenticated(true);
     setHasCompletedOnboarding(false);
-    if (userData) {
-      setUser(userData);
-      saveState(true, false, userData);
-    } else {
-      saveState(true, false, user);
-    }
   };
 
   const completeOnboarding = () => {
     setHasCompletedOnboarding(true);
-    saveState(true, true, user);
   };
 
   const logout = () => {
+    localStorage.removeItem('token');
+
+    setUser(null);
     setIsAuthenticated(false);
     setHasCompletedOnboarding(false);
-    setUser({
-      name: 'Hem Ranjan',
-      greeting: 'Hem',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-      email: 'hem.ranjan@example.com',
-    });
-    localStorage.removeItem('meditrack_auth');
   };
 
   return (
@@ -115,6 +95,7 @@ export function AuthProvider({ children }) {
         isAuthenticated,
         hasCompletedOnboarding,
         user,
+        loading,
         login,
         signup,
         completeOnboarding,

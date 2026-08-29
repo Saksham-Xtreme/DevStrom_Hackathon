@@ -6,11 +6,38 @@ const medicineSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
+            index: true,
+        },
+
+        // DrugDB reference
+        drugSctId: {
+            type: String,
+            trim: true,
+        },
+
+        genericSctId: {
+            type: String,
+            trim: true,
         },
 
         name: {
             type: String,
             required: true,
+            trim: true,
+        },
+
+        genericName: {
+            type: String,
+            trim: true,
+        },
+
+        brandName: {
+            type: String,
+            trim: true,
+        },
+
+        manufacturer: {
+            type: String,
             trim: true,
         },
 
