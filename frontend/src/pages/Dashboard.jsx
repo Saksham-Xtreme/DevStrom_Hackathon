@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -27,6 +27,14 @@ function Dashboard() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifications] = useState(initialNotifications);
   const [timeRange, setTimeRange] = useState('This Week');
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has('oauth_success')) {
+      url.searchParams.delete('oauth_success');
+      window.history.replaceState({}, document.title, url.pathname);
+    }
+  }, []);
 
   const filteredSchedule = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();

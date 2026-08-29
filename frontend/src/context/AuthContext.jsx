@@ -6,6 +6,16 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('oauth_success') === 'true') {
+          localStorage.setItem('meditrack_auth', JSON.stringify({
+            isAuthenticated: true,
+            hasCompletedOnboarding: true
+          }));
+          return true;
+        }
+      }
       const authState = localStorage.getItem('meditrack_auth');
       return authState ? JSON.parse(authState).isAuthenticated : false;
     } catch {
@@ -15,6 +25,12 @@ export function AuthProvider({ children }) {
 
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(() => {
     try {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('oauth_success') === 'true') {
+          return true;
+        }
+      }
       const authState = localStorage.getItem('meditrack_auth');
       return authState ? JSON.parse(authState).hasCompletedOnboarding : false;
     } catch {

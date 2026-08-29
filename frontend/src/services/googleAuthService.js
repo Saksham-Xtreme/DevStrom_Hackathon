@@ -1,5 +1,5 @@
 const resolveBackendUrl = () => {
-  const configured = import.meta.env.VITE_GOOGLE_AUTH_URL || import.meta.env.BACKEND_URL;
+  const configured = import.meta.env.VITE_GOOGLE_AUTH_URL || import.meta.env.VITE_API_URL || 'http://localhost:8080';
   return configured.replace(/\/$/, '');
 };
 
