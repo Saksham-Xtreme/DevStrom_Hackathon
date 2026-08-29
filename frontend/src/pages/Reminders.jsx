@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav';
 import Icon from '../components/Icon';
+import { SkeletonCard } from '../components/Skeleton';
+import { useToast } from '../components/ToastContext';
 import { medicineApi } from '../api/client';
 import '../styles/medicines.css';
 
@@ -13,6 +15,7 @@ const statusLabels = {
 };
 
 function Reminders() {
+  const { showToast } = useToast();
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,8 +42,10 @@ function Reminders() {
     try {
       await medicineApi.logDose(id, newStatus);
       await loadToday();
+      showToast(`Dose marked ${newStatus.toLowerCase()}.`, 'success');
     } catch (err) {
       console.error('Failed to update dose:', err);
+      showToast('Unable to update the dose. Please try again.', 'error');
     } finally {
       setUpdatingId(null);
     }
@@ -74,8 +79,10 @@ function Reminders() {
             </div>
 
             {loading && (
-              <div className="reminders-empty-state">
-                <p>Loading today’s reminders…</p>
+              <div className="reminders-timeline-list">
+                {Array.from({ length: 4 }).map((_, idx) => (
+                  <SkeletonCard key={idx} lines={3} />
+                ))}
               </div>
             )}
 
@@ -83,6 +90,9 @@ function Reminders() {
               <div className="reminders-empty-state">
                 <Icon name="alert" />
                 <h3>{error}</h3>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={loadToday}>
+                  Try Again
+                </button>
               </div>
             )}
 

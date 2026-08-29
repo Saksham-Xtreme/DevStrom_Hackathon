@@ -167,7 +167,7 @@ export default function Settings() {
   const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2500); };
 
   const initials = (user?.name || 'MT').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || 'MediTrack User';
+  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ') || user?.email || 'User';
 
   const navLinks = [
     { id: 'profile',       icon: '👤', label: 'Profile' },

@@ -216,6 +216,20 @@
   color: #9cb0a8;
 }
 
+.field-input.has-error {
+  border-color: var(--status-missed-text);
+}
+
+.field-input.has-error:focus {
+  box-shadow: 0 0 0 3px rgba(217, 67, 67, 0.15);
+}
+
+.field-error {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--status-missed-text);
+}
+
 /* Main Action Button */
 .auth-primary-btn {
   width: 100%;

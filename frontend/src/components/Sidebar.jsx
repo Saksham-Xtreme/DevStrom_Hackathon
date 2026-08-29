@@ -21,7 +21,7 @@ function Sidebar({ activeNav, onNavChange }) {
   const { logout, user } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const displayName = user?.name || 'MediTrack User';
+  const displayName = user?.name || user?.email || 'User';
   const initials = displayName
     .split(' ')
     .map((part) => part[0])

@@ -61,6 +61,11 @@ const medicineSchema = new mongoose.Schema(
             required: true,
         },
 
+        dose: {
+            type: String,
+            trim: true,
+        },
+
         form: {
             type: String,
             enum: [

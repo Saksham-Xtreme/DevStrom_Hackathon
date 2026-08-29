@@ -33,7 +33,7 @@ function Caregivers() {
       ? Math.round((takenCount / todayDoses.length) * 100)
       : 0;
 
-  const patientName = user?.name || 'MediTrack User';
+  const patientName = user?.name || user?.email || 'Patient';
 
   const activity = useMemo(
     () =>

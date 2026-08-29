@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { medicineApi } from '../api/client';
+import { useToast } from './ToastContext';
 
 const emptyMedicine = {
   name: '',
@@ -31,15 +32,43 @@ function toFormData(medicine) {
   };
 }
 
+const REQUIRED_FIELDS = ['name', 'strength', 'dose', 'times', 'startDate', 'expiryDate'];
+
+function validate(formData) {
+  const errors = {};
+  REQUIRED_FIELDS.forEach((field) => {
+    if (!String(formData[field] || '').trim()) {
+      errors[field] = 'This field is required.';
+    }
+  });
+
+  if (formData.endDate && formData.startDate && formData.endDate < formData.startDate) {
+    errors.endDate = 'End date cannot be before the start date.';
+  }
+
+  const times = formData.times
+    .split(',')
+    .map((time) => time.trim())
+    .filter(Boolean);
+  if (times.length === 0) {
+    errors.times = 'At least one scheduled time is required.';
+  }
+
+  return errors;
+}
+
 function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState(() => toFormData(initialData));
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
   // DrugDB autocomplete
   const [query, setQuery] = useState(formData.name || '');
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const debounceRef = useRef(null);
 
   useEffect(() => {
@@ -47,6 +76,7 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
     if (query.trim().length < 2) {
       setResults([]);
       setShowDropdown(false);
+      setActiveIndex(-1);
       return;
     }
 
@@ -56,8 +86,11 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
     debounceRef.current = setTimeout(async () => {
       try {
         const response = await medicineApi.search(query.trim(), 10);
-        setResults(response.data?.results || response.results || []);
+        const results = response.data?.results || response.results || [];
+        console.log('[MEDICINE SEARCH]', { query: query.trim(), count: results.length });
+        setResults(results);
         setShowDropdown(true);
+        setActiveIndex(-1);
       } catch (error) {
         console.error('Medicine search failed:', error);
         setResults([]);
@@ -76,6 +109,13 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
   const updateField = (field, value) => {
     setFormData((current) => ({ ...current, [field]: value }));
     if (field === 'name') setQuery(value);
+    if (errors[field]) {
+      setErrors((current) => {
+        const next = { ...current };
+        delete next[field];
+        return next;
+      });
+    }
   };
 
   const applyDrugSuggestion = (item) => {
@@ -83,12 +123,8 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
     const generic = item.generic || {};
     const manufacturer = item.manufacturer || {};
 
-    const name =
-      item.medicineName ||
-      brand.brandName ||
-      formData.name;
+    const name = item.medicineName || brand.brandName || formData.name;
 
-    // Try to pull a strength like "500 mg" out of the medicine name.
     const strengthMatch = (item.medicineName || '').match(/(\d+\s?(mg|ml|mcg|g|iu))/i);
     const strength = strengthMatch ? strengthMatch[0] : formData.strength;
 
@@ -101,10 +137,39 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
     if (generic.sctid) updateField('genericSctId', generic.sctid);
 
     setShowDropdown(false);
+    setActiveIndex(-1);
+  };
+
+  const handleKeyDown = (event) => {
+    if (!showDropdown || results.length === 0) return;
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveIndex((idx) => (idx + 1) % results.length);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveIndex((idx) => (idx <= 0 ? results.length - 1 : idx - 1));
+    } else if (event.key === 'Enter') {
+      if (activeIndex >= 0 && results[activeIndex]) {
+        event.preventDefault();
+        applyDrugSuggestion(results[activeIndex]);
+      }
+    } else if (event.key === 'Escape') {
+      setShowDropdown(false);
+      setActiveIndex(-1);
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    const validationErrors = validate(formData);
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      showToast('Please fix the highlighted fields.', 'error');
+      return;
+    }
 
     const payload = {
       ...formData,
@@ -114,17 +179,30 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
         .filter(Boolean),
     };
 
+    console.log('[MEDICINE CREATE] payload', payload);
+
     setSaving(true);
     try {
-      await onSave(payload);
+      const created = await onSave(payload);
+      console.log('[MEDICINE CREATE] response', created);
       onClose();
     } catch (error) {
-      console.error('Save medicine failed:', error);
-      alert('Unable to save the medicine. Please try again.');
+      console.error('[MEDICINE CREATE ERROR]', error);
+      showToast('Unable to save the medicine. Please try again.', 'error');
     } finally {
       setSaving(false);
     }
   };
+
+  const renderField = (field, label, node, full = false) => (
+    <div className={`field-group ${full ? 'form-full-width' : ''}`}>
+      <label className="field-label" htmlFor={`med-${field}`}>
+        {label}
+      </label>
+      {node}
+      {errors[field] && <span className="field-error">{errors[field]}</span>}
+    </div>
+  );
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -138,7 +216,7 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="modal-form-grid">
             <div className="field-group form-full-width" style={{ position: 'relative' }}>
               <label className="field-label" htmlFor="med-name">
@@ -146,20 +224,25 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
               </label>
               <input
                 id="med-name"
-                className="field-input"
+                className={`field-input ${errors.name ? 'has-error' : ''}`}
                 type="text"
                 placeholder="Type to search DrugDB (e.g. paracetamol)"
                 value={formData.name}
                 onChange={(event) => updateField('name', event.target.value)}
-                required
+                onKeyDown={handleKeyDown}
                 autoComplete="off"
+                aria-expanded={showDropdown}
+                role="combobox"
+                aria-controls="drugdb-listbox"
               />
 
               {showDropdown && (
-                <div className="drugdb-dropdown">
+                <div className="drugdb-dropdown" id="drugdb-listbox" role="listbox">
                   {searching && <div className="drugdb-dropdown__hint">Searching…</div>}
                   {!searching && results.length === 0 && (
-                    <div className="drugdb-dropdown__hint">No matches. You can still type a custom name.</div>
+                    <div className="drugdb-dropdown__hint">
+                      No matches. You can still type a custom name.
+                    </div>
                   )}
                   {!searching &&
                     results.map((item, idx) => {
@@ -173,8 +256,15 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
                         <button
                           type="button"
                           key={item.medicineSctid || idx}
-                          className="drugdb-dropdown__item"
-                          onClick={() => applyDrugSuggestion(item)}
+                          role="option"
+                          aria-selected={activeIndex === idx}
+                          className={`drugdb-dropdown__item ${
+                            activeIndex === idx ? 'is-active' : ''
+                          }`}
+                          onMouseDown={(event) => {
+                            event.preventDefault();
+                            applyDrugSuggestion(item);
+                          }}
                         >
                           <span className="drugdb-dropdown__name">{label}</span>
                           {sub && <span className="drugdb-dropdown__sub">{sub}</span>}
@@ -183,12 +273,12 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
                     })}
                 </div>
               )}
+              {errors.name && <span className="field-error">{errors.name}</span>}
             </div>
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-generic">
-                Generic Name
-              </label>
+            {renderField(
+              'genericName',
+              'Generic Name',
               <input
                 id="med-generic"
                 className="field-input"
@@ -197,42 +287,37 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
                 value={formData.genericName}
                 onChange={(event) => updateField('genericName', event.target.value)}
               />
-            </div>
+            )}
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-strength">
-                Strength *
-              </label>
+            {renderField(
+              'strength',
+              'Strength *',
               <input
                 id="med-strength"
-                className="field-input"
+                className={`field-input ${errors.strength ? 'has-error' : ''}`}
                 type="text"
                 placeholder="e.g. 500 mg, 10 ml"
                 value={formData.strength}
                 onChange={(event) => updateField('strength', event.target.value)}
-                required
               />
-            </div>
+            )}
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-dose">
-                Dose *
-              </label>
+            {renderField(
+              'dose',
+              'Dose *',
               <input
                 id="med-dose"
-                className="field-input"
+                className={`field-input ${errors.dose ? 'has-error' : ''}`}
                 type="text"
                 placeholder="e.g. 1 Tablet, 5 ml"
                 value={formData.dose}
                 onChange={(event) => updateField('dose', event.target.value)}
-                required
               />
-            </div>
+            )}
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-form">
-                Dosage Form
-              </label>
+            {renderField(
+              'form',
+              'Dosage Form',
               <select
                 id="med-form"
                 className="field-input"
@@ -247,12 +332,11 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
                 <option value="drops">Drops</option>
                 <option value="other">Other</option>
               </select>
-            </div>
+            )}
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-frequency">
-                Frequency
-              </label>
+            {renderField(
+              'frequency',
+              'Frequency',
               <select
                 id="med-frequency"
                 className="field-input"
@@ -264,27 +348,25 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
                 <option value="Three times daily">Three times daily</option>
                 <option value="As needed">As needed (SOS)</option>
               </select>
-            </div>
+            )}
 
-            <div className="field-group form-full-width">
-              <label className="field-label" htmlFor="med-times">
-                Scheduled Time(s) *
-              </label>
+            {renderField(
+              'times',
+              'Scheduled Time(s) *',
               <input
                 id="med-times"
-                className="field-input"
+                className={`field-input ${errors.times ? 'has-error' : ''}`}
                 type="text"
                 placeholder="e.g. 08:00 AM, 08:00 PM"
                 value={formData.times}
                 onChange={(event) => updateField('times', event.target.value)}
-                required
-              />
-            </div>
+              />,
+              true
+            )}
 
-            <div className="field-group form-full-width">
-              <label className="field-label" htmlFor="med-instructions">
-                Instructions
-              </label>
+            {renderField(
+              'instructions',
+              'Instructions',
               <input
                 id="med-instructions"
                 className="field-input"
@@ -292,55 +374,50 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
                 placeholder="e.g. After lunch, on empty stomach"
                 value={formData.instructions}
                 onChange={(event) => updateField('instructions', event.target.value)}
-              />
-            </div>
+              />,
+              true
+            )}
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-start">
-                Start Date *
-              </label>
+            {renderField(
+              'startDate',
+              'Start Date *',
               <input
                 id="med-start"
-                className="field-input"
+                className={`field-input ${errors.startDate ? 'has-error' : ''}`}
                 type="date"
                 value={formData.startDate}
                 onChange={(event) => updateField('startDate', event.target.value)}
-                required
               />
-            </div>
+            )}
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-end">
-                End Date
-              </label>
+            {renderField(
+              'endDate',
+              'End Date',
               <input
                 id="med-end"
-                className="field-input"
+                className={`field-input ${errors.endDate ? 'has-error' : ''}`}
                 type="date"
                 value={formData.endDate}
-                onChange={(event) => updateField('endDate', event.target.value)}
                 min={formData.startDate}
+                onChange={(event) => updateField('endDate', event.target.value)}
               />
-            </div>
+            )}
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-expiry">
-                Expiry Date *
-              </label>
+            {renderField(
+              'expiryDate',
+              'Expiry Date *',
               <input
                 id="med-expiry"
-                className="field-input"
+                className={`field-input ${errors.expiryDate ? 'has-error' : ''}`}
                 type="date"
                 value={formData.expiryDate}
                 onChange={(event) => updateField('expiryDate', event.target.value)}
-                required
               />
-            </div>
+            )}
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-stock">
-                Stock
-              </label>
+            {renderField(
+              'stock',
+              'Stock',
               <input
                 id="med-stock"
                 className="field-input"
@@ -350,12 +427,11 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
                 value={formData.stock ?? ''}
                 onChange={(event) => updateField('stock', event.target.value)}
               />
-            </div>
+            )}
 
-            <div className="field-group">
-              <label className="field-label" htmlFor="med-category">
-                Category
-              </label>
+            {renderField(
+              'category',
+              'Category',
               <input
                 id="med-category"
                 className="field-input"
@@ -364,7 +440,7 @@ function AddMedicineModal({ isOpen, onClose, onSave, initialData = null }) {
                 value={formData.category}
                 onChange={(event) => updateField('category', event.target.value)}
               />
-            </div>
+            )}
           </div>
 
           <div className="modal-footer">

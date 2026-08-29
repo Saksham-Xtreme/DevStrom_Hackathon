@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav';
 import Icon from '../components/Icon';
+import { useToast } from '../components/ToastContext';
 import { medicineApi } from '../api/client';
 import { fetchMedicines } from '../services/medicineService';
 import '../styles/adherence.css';
 
 function Reports() {
+  const { showToast } = useToast();
   const [range, setRange] = useState('7');
   const [search, setSearch] = useState('');
   const [exporting, setExporting] = useState(false);
@@ -56,10 +58,31 @@ function Reports() {
 
   const handleExport = () => {
     setExporting(true);
-    setTimeout(() => {
+    try {
+      const header = ['Date', 'Time', 'Medicine', 'Dose', 'Status'];
+      const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+      const rows = todayDoses.map((dose) =>
+        [dose.date || 'Today', dose.time, dose.name, dose.dose, dose.status]
+          .map(escape)
+          .join(',')
+      );
+      const csv = [header.join(','), ...rows].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'meditrack-adherence.csv';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('Report exported successfully. CSV downloaded.', 'success');
+    } catch (err) {
+      console.error('CSV export failed:', err);
+      showToast('Unable to export the report.', 'error');
+    } finally {
       setExporting(false);
-      alert('Report exported successfully! CSV file downloaded.');
-    }, 1200);
+    }
   };
 
   return (

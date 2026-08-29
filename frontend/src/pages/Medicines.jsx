@@ -3,6 +3,8 @@ import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav';
 import MedicineCard from '../components/MedicineCard';
 import AddMedicineModal from '../components/AddMedicineModal';
+import { SkeletonCard } from '../components/Skeleton';
+import { useToast } from '../components/ToastContext';
 import Icon from '../components/Icon';
 import {
   fetchMedicines,
@@ -14,6 +16,7 @@ import {
 import '../styles/medicines.css';
 
 function Medicines() {
+  const { showToast } = useToast();
   const [medicines, setMedicines] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,6 +25,7 @@ function Medicines() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const loadMedicines = async () => {
     try {
@@ -64,28 +68,32 @@ function Medicines() {
     try {
       if (data.id) {
         await updateMedicine(data.id, data);
+        showToast('Medication updated successfully.', 'success');
       } else {
         await createMedicine(data);
+        showToast('Medication added successfully.', 'success');
       }
       await loadMedicines();
       setEditingMed(null);
     } catch (err) {
       console.error('Save medicine failed:', err);
-      alert('Unable to save the medicine. Please try again.');
+      showToast('Unable to save the medicine. Please try again.', 'error');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDeleteMed = async (id) => {
-    if (window.confirm('Are you sure you want to remove this medication?')) {
-      try {
-        await deleteMedicine(id);
-        await loadMedicines();
-      } catch (err) {
-        console.error('Delete medicine failed:', err);
-        alert('Unable to delete the medicine.');
-      }
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    try {
+      await deleteMedicine(pendingDelete.id);
+      await loadMedicines();
+      showToast('Medication removed.', 'success');
+    } catch (err) {
+      console.error('Delete medicine failed:', err);
+      showToast('Unable to delete the medicine.', 'error');
+    } finally {
+      setPendingDelete(null);
     }
   };
 
@@ -129,6 +137,7 @@ function Medicines() {
                   type="text"
                   className="meds-search-input"
                   placeholder="Search your medicines..."
+                  aria-label="Search your medicines"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -160,8 +169,10 @@ function Medicines() {
             </div>
 
             {loading && (
-              <div className="meds-empty-state card">
-                <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading your medicines…</p>
+              <div className="meds-grid">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <SkeletonCard key={idx} lines={5} />
+                ))}
               </div>
             )}
 
@@ -169,6 +180,9 @@ function Medicines() {
               <div className="meds-empty-state card">
                 <Icon name="alert" style={{ fontSize: '32px', color: 'var(--status-missed-text)' }} />
                 <h3 style={{ margin: '12px 0 6px' }}>{error}</h3>
+                <button type="button" className="btn btn-ghost btn-sm" onClick={loadMedicines}>
+                  Try Again
+                </button>
               </div>
             )}
 
@@ -194,7 +208,12 @@ function Medicines() {
                     key={med.id}
                     medicine={med}
                     onEdit={handleOpenEdit}
-                    onDelete={handleDeleteMed}
+                    onDelete={(id) =>
+                      setPendingDelete({
+                        id,
+                        name: med.name,
+                      })
+                    }
                   />
                 ))}
               </div>
@@ -215,6 +234,48 @@ function Medicines() {
         onSave={handleSaveMed}
         initialData={editingMed}
       />
+
+      {pendingDelete && (
+        <div className="modal-backdrop" onClick={() => setPendingDelete(null)}>
+          <div
+            className="modal-box"
+            style={{ maxWidth: '420px' }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h2 className="modal-title">Delete {pendingDelete.name}?</h2>
+              <button
+                type="button"
+                className="icon-btn btn-sm"
+                onClick={() => setPendingDelete(null)}
+                aria-label="Close"
+              >
+                X
+              </button>
+            </div>
+            <p style={{ color: 'var(--text-secondary)', margin: '4px 0 20px' }}>
+              This will remove the medication and its associated schedules.
+            </p>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setPendingDelete(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                style={{ background: 'var(--status-missed-text)' }}
+                onClick={confirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -40,6 +40,7 @@ const toClientMedicine = (medicine, schedules = []) => {
         category: plain.category,
         frequency: plain.frequency,
         dosage: plain.dosage,
+        dose: plain.dose,
         form: plain.form,
         instructions: plain.instructions,
         startDate: plain.startDate,
@@ -75,6 +76,8 @@ const searchMedicines = async (req, res, next) => {
             success: true,
             data: result,
         });
+
+        console.log(`[DRUGDB SEARCH] query=${q} count=${result?.results?.length || 0}`);
     } catch (error) {
         console.error("DrugDB search error:", error.message);
         next(error);
@@ -163,38 +166,39 @@ const createMedicine = async (req, res, next) => {
             manufacturer,
             strength,
             category,
-            frequency,
-            dosage,
-            form,
-            instructions,
-            startDate,
-            endDate,
-            stock,
-            expiryDate,
-            drugSctId,
-            genericSctId,
-            times = [],
-            dose = "1 Tablet",
-        } = req.body;
+        frequency,
+        dosage,
+        form,
+        instructions,
+        startDate,
+        endDate,
+        stock,
+        expiryDate,
+        drugSctId,
+        genericSctId,
+        times = [],
+        dose,
+    } = req.body;
 
-        if (!name || !startDate) {
-            return res.status(400).json({
-                success: false,
-                message: "Medicine name and start date are required",
-            });
-        }
+    if (!name || !startDate) {
+        return res.status(400).json({
+            success: false,
+            message: "Medicine name and start date are required",
+        });
+    }
 
-        const medicine = await Medicine.create({
-            userId: req.user._id,
-            name,
-            genericName,
-            brandName,
-            manufacturer,
-            strength,
-            category,
-            frequency,
-            dosage: dosage || strength,
-            form: form || "tablet",
+    const medicine = await Medicine.create({
+        userId: req.user._id,
+        name,
+        genericName,
+        brandName,
+        manufacturer,
+        strength,
+        category,
+        frequency,
+        dosage: dosage || dose || strength,
+        dose: dose || dosage || strength,
+        form: form || "tablet",
             instructions,
             startDate: new Date(startDate),
             endDate: endDate ? new Date(endDate) : undefined,
@@ -223,6 +227,10 @@ const createMedicine = async (req, res, next) => {
             success: true,
             data: toClientMedicine(medicine, createdSchedules),
         });
+
+        console.log(
+            `[MEDICINE CREATE] userId=${req.user._id} name=${name} schedules=${createdSchedules.length}`
+        );
     } catch (error) {
         console.error("Create medicine error:", error.message);
         next(error);
@@ -250,30 +258,31 @@ const updateMedicine = async (req, res, next) => {
             manufacturer,
             strength,
             category,
-            frequency,
-            dosage,
-            form,
-            instructions,
-            startDate,
-            endDate,
-            stock,
-            expiryDate,
-            drugSctId,
-            genericSctId,
-            times,
-            dose,
-            isActive,
-        } = req.body;
+        frequency,
+        dosage,
+        form,
+        instructions,
+        startDate,
+        endDate,
+        stock,
+        expiryDate,
+        drugSctId,
+        genericSctId,
+        times,
+        dose,
+        isActive,
+    } = req.body;
 
-        if (name !== undefined) medicine.name = name;
-        if (genericName !== undefined) medicine.genericName = genericName;
-        if (brandName !== undefined) medicine.brandName = brandName;
-        if (manufacturer !== undefined) medicine.manufacturer = manufacturer;
-        if (strength !== undefined) medicine.strength = strength;
-        if (category !== undefined) medicine.category = category;
-        if (frequency !== undefined) medicine.frequency = frequency;
-        if (dosage !== undefined) medicine.dosage = dosage;
-        if (form !== undefined) medicine.form = form;
+    if (name !== undefined) medicine.name = name;
+    if (genericName !== undefined) medicine.genericName = genericName;
+    if (brandName !== undefined) medicine.brandName = brandName;
+    if (manufacturer !== undefined) medicine.manufacturer = manufacturer;
+    if (strength !== undefined) medicine.strength = strength;
+    if (category !== undefined) medicine.category = category;
+    if (frequency !== undefined) medicine.frequency = frequency;
+    if (dosage !== undefined) medicine.dosage = dosage;
+    if (dose !== undefined) medicine.dose = dose;
+    if (form !== undefined) medicine.form = form;
         if (instructions !== undefined) medicine.instructions = instructions;
         if (startDate !== undefined) medicine.startDate = new Date(startDate);
         if (endDate !== undefined) medicine.endDate = endDate ? new Date(endDate) : undefined;
