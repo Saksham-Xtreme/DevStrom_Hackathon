@@ -12,11 +12,80 @@ function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Handle redirect back from Google OAuth — backend sends ?oauth_success=true
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('oauth_success') === 'true') {
-      login();
-      navigate('/dashboard');
+    const oauthSuccess = params.get('oauth_success');
+    const oauthError = params.get('oauth_error');
+
+    // Helper to get cookie value by name
+    const getCookie = (cname) => {
+      const name = cname + "=";
+      const decodedCookie = decodeURIComponent(document.cookie);
+      const ca = decodedCookie.split(';');
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') {
+          c = c.substring(1);
+        }
+        if (c.indexOf(name) === 0) {
+          return c.substring(name.length, c.length);
+        }
+      }
+      return '';
+    };
+
+    // Debug logging to see exactly what parameters/cookies the backend redirects with
+    if (window.location.search) {
+      localStorage.setItem('meditrack_oauth_debug', window.location.search);
+    }
+    if (document.cookie) {
+      localStorage.setItem('meditrack_cookies_debug', document.cookie);
+    }
+
+    if (oauthSuccess === 'true') {
+      // 1. Try to parse a full serialized user object if the backend sent one in query parameters
+      let parsedUser = null;
+      const userParam = params.get('user');
+      if (userParam) {
+        try {
+          parsedUser = JSON.parse(decodeURIComponent(userParam));
+        } catch (e) {
+          console.error('Error parsing user query param JSON:', e);
+        }
+      }
+
+      // 2. Try to parse user from cookies
+      let cookieUser = null;
+      const userCookie = getCookie('user') || getCookie('meditrack_user');
+      if (userCookie) {
+        try {
+          cookieUser = JSON.parse(userCookie);
+        } catch (e) {
+          console.error('Error parsing user cookie JSON:', e);
+        }
+      }
+
+      // 3. Fallback to individual parameters
+      const rawName = params.get('name') || params.get('displayName') || parsedUser?.name || cookieUser?.name || getCookie('name') || '';
+      const rawEmail = params.get('email') || parsedUser?.email || cookieUser?.email || getCookie('email') || '';
+      const rawAvatar = params.get('profileImage') || params.get('avatar') || params.get('picture') || parsedUser?.profileImage || parsedUser?.avatar || cookieUser?.profileImage || cookieUser?.avatar || getCookie('avatar') || getCookie('profileImage') || '';
+
+      const name = rawName ? decodeURIComponent(rawName) : '';
+      const email = rawEmail ? decodeURIComponent(rawEmail) : '';
+      const avatar = rawAvatar ? decodeURIComponent(rawAvatar) : '';
+
+      const userObj = {
+        name: name || 'Google User',
+        greeting: name ? name.split(' ')[0] : 'User',
+        avatar: avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+        email: email || '',
+      };
+
+      login(userObj);
+      navigate('/dashboard', { replace: true });
+    } else if (oauthError) {
+      console.error('OAuth error:', oauthError);
     }
   }, [login, navigate]);
 

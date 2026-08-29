@@ -1,174 +1,378 @@
-.dashboard-grid {
+.dashboard-shell {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
+/* Greeting Header */
+.dashboard-welcome {
+  margin-bottom: 4px;
+}
+
+.dashboard-welcome h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.dashboard-welcome p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Stat Cards Row */
 .stats-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 16px;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   .stats-row {
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
   }
 }
 
 .stat-card {
-  padding: 18px 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 18px;
 }
 
-@media (min-width: 768px) {
-  .stat-card {
-    padding: 20px 18px;
-  }
+.stat-card__top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.stat-card__icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-card__icon-wrap--primary,
+.stat-card__icon-wrap--taken,
+.stat-card__icon-wrap--adherence {
+  background: var(--green-light);
+  color: var(--green-primary);
+}
+
+.stat-card__icon-wrap--missed {
+  background: var(--status-missed-bg);
+  color: var(--status-missed-text);
+}
+
+.stat-card__labels {
+  display: flex;
+  flex-direction: column;
 }
 
 .stat-card__label {
-  margin: 0 0 8px;
+  margin: 0 0 2px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
 }
 
 .stat-card__value {
   margin: 0;
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 26px;
+  font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1;
   color: var(--text-primary);
 }
 
-.stat-card__value--primary {
-  color: var(--green-primary);
-}
-
-.stat-card__value--taken {
-  color: var(--status-taken);
-}
-
-.stat-card__value--missed {
-  color: var(--status-missed);
-}
-
-.stat-card__value--adherence {
-  color: var(--green-dark);
+.stat-card__bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
 }
 
 .stat-card__subtitle {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 12px;
   color: var(--text-secondary);
+  font-weight: 500;
 }
 
-.dashboard-main {
+.stat-card__sparkline {
+  margin-left: auto;
+  line-height: 0;
+}
+
+/* Dashboard Middle Grid */
+.dashboard-panel-grid {
   display: grid;
-  gap: 16px;
+  gap: 20px;
+  grid-template-columns: 1fr;
 }
 
-@media (min-width: 1024px) {
-  .dashboard-main {
-    grid-template-columns: 1.4fr 1fr;
-    gap: 20px;
+@media (min-width: 900px) {
+  .dashboard-panel-grid {
+    grid-template-columns: 1.4fr 1.3fr 1fr;
     align-items: start;
   }
 }
 
-.dashboard-side {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.dashboard-bottom {
-  display: grid;
-  gap: 16px;
-}
-
-@media (min-width: 768px) {
-  .dashboard-bottom {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (min-width: 1024px) {
-  .dashboard-bottom {
-    grid-column: 1 / -1;
-  }
-}
-
-.schedule-card {
-  padding: 20px;
-}
-
-.schedule-card__header {
+.panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
-.schedule-card__title {
+.panel-header h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--text-primary);
 }
 
-.schedule-card__count {
+.panel-link {
+  border: none;
+  background: transparent;
+  color: var(--green-primary);
   font-size: 13px;
-  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 0;
+  cursor: pointer;
 }
 
-.schedule-card__list {
+.panel-link:hover {
+  text-decoration: underline;
+}
+
+.panel-select {
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Schedule Panel */
+.schedule-panel {
+  padding: 20px;
+}
+
+.schedule-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
-.schedule-card__empty {
-  padding: 32px 16px;
-  text-align: center;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-.medicine-row {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 14px;
+.schedule-item {
+  display: flex;
   align-items: center;
-  padding: 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--page-bg);
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px fill var(--border);
 }
 
-@media (min-width: 640px) {
-  .medicine-row {
-    grid-template-columns: auto 1fr auto auto;
-  }
+.schedule-item:last-child {
+  border-bottom: none;
 }
 
-.medicine-row:hover {
-  border-color: rgba(47, 143, 112, 0.18);
+.schedule-item__left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
-.medicine-row--taken {
-  opacity: 0.88;
+.schedule-item__time {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  min-width: 65px;
 }
 
-.medicine-row__icon {
+.schedule-item__info h3 {
+  margin: 0 0 2px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.schedule-item__info p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.schedule-item__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Adherence Overview Wave Chart */
+.adherence-panel {
+  padding: 20px;
+}
+
+.wave-chart-container {
+  display: flex;
+  gap: 10px;
+  height: 180px;
+  margin-top: 10px;
+}
+
+.wave-chart-yaxis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding-bottom: 22px;
+}
+
+.wave-chart-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.wave-chart-svg {
+  width: 100%;
+  height: 145px;
+  overflow: visible;
+}
+
+.wave-chart-xaxis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding-top: 6px;
+}
+
+/* Side Stack */
+.dashboard-side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.caregiver-panel {
+  padding: 18px 20px;
+}
+
+.caregiver-panel__label {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.caregiver-panel__body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.caregiver-panel__avatar {
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-sm);
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.caregiver-panel__avatar-fallback {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3898ec, #107c56);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.caregiver-panel__sub {
+  margin: 0 0 2px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.caregiver-panel__name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.caregiver-panel__btn {
+  width: 100%;
+  background: var(--green-primary);
+  color: #ffffff;
+  border-radius: 10px;
+  min-height: 38px;
+  font-weight: 600;
+}
+
+.caregiver-panel__btn:hover {
+  background: var(--green-dark);
+}
+
+/* Next Refill Card */
+.refill-panel {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.refill-panel__info h3 {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.refill-panel__info h4 {
+  margin: 0 0 2px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.refill-panel__info p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.refill-panel__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
   background: var(--green-light);
   color: var(--green-primary);
   display: flex;
@@ -177,259 +381,103 @@
   flex-shrink: 0;
 }
 
-.medicine-row__time {
-  margin: 0 0 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--green-dark);
+/* Bottom Grid */
+.bottom-panel-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
 }
 
-.medicine-row__name {
-  margin: 0 0 2px;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.medicine-row__meta {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.medicine-row__actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-@media (max-width: 639px) {
-  .medicine-row {
-    grid-template-columns: auto 1fr;
-    grid-template-rows: auto auto;
-  }
-
-  .medicine-row__actions {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
+@media (min-width: 768px) {
+  .bottom-panel-grid {
+    grid-template-columns: 1.3fr 1fr;
   }
 }
 
-.adherence-card {
-  padding: 20px;
+.summary-panel {
+  padding: 20px 22px;
 }
 
-.adherence-card__title {
-  margin: 0 0 12px;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.adherence-card__header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.adherence-card__score {
-  margin: 0;
-  font-size: 36px;
-  font-weight: 700;
-  letter-spacing: -0.03em;
-  color: var(--green-primary);
-  line-height: 1;
-}
-
-.adherence-card__period {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.adherence-chart {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px;
-  height: 120px;
-  padding-top: 8px;
-}
-
-.adherence-chart__bar-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  height: 100%;
-}
-
-.adherence-chart__bar-track {
-  flex: 1;
-  width: 100%;
-  max-width: 32px;
-  display: flex;
-  align-items: flex-end;
+.date-pill {
+  padding: 4px 10px;
+  border-radius: 999px;
   background: var(--green-light);
-  border-radius: 6px 6px 4px 4px;
-  overflow: hidden;
+  color: var(--green-primary);
+  font-size: 11.5px;
+  font-weight: 700;
 }
 
-.adherence-chart__bar {
-  width: 100%;
-  background: linear-gradient(180deg, var(--green-primary), var(--green-dark));
-  border-radius: 6px 6px 4px 4px;
-  transition: height 0.4s ease;
-  min-height: 4px;
+.summary-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 12px;
 }
 
-.adherence-chart__label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.caregiver-card {
-  padding: 18px 20px;
-}
-
-.caregiver-card__label {
-  margin: 0 0 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.caregiver-card__body {
+.summary-metric {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
+  flex-direction: column;
 }
 
-.caregiver-card__avatar {
+.summary-metric__val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.summary-metric__lbl {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Reminder Card with Botanical Artwork */
+.reminder-panel {
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.reminder-panel__content {
+  position: relative;
+  z-index: 2;
+  max-width: 65%;
+}
+
+.reminder-panel__text {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.reminder-panel__bell {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #4a9fd4, var(--status-upcoming));
-  color: #fff;
+  background: var(--green-light);
+  color: var(--green-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 14px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
 }
 
-.caregiver-card__name {
-  margin: 0 0 2px;
-  font-size: 15px;
-  font-weight: 600;
+.reminder-botanical-art {
+  position: absolute;
+  right: -10px;
+  bottom: -20px;
+  width: 140px;
+  height: 140px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.85;
 }
 
-.caregiver-card__relation {
-  margin: 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.caregiver-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.caregiver-card__status {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--status-taken);
-}
-
-.caregiver-card__status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--status-taken);
-}
-
-.expiry-alert {
-  padding: 16px 18px;
-  border-left: 4px solid var(--status-expiring);
-  background: rgba(217, 154, 61, 0.08);
-}
-
-.expiry-alert__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--status-expiring);
-}
-
-.expiry-alert__name {
-  margin: 0 0 4px;
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.expiry-alert__meta {
-  margin: 0 0 12px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.health-tip {
-  padding: 18px 20px;
-  background: linear-gradient(135deg, rgba(232, 245, 239, 0.9), rgba(255, 255, 255, 0.95));
-}
-
-.health-tip__label {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--green-dark);
-}
-
-.health-tip__message {
-  margin: 0;
-  font-size: 14px;
-  color: var(--text-primary);
-  line-height: 1.55;
-}
-
-.quick-actions {
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.quick-actions__title {
-  margin: 0 0 4px;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.quick-actions__subtitle {
-  margin: 0 0 8px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.quick-actions__btn {
-  width: 100%;
-  justify-content: center;
-  min-height: 44px;
-}

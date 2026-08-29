@@ -20,7 +20,7 @@ function Adherence() {
   const missedDoses = useMemo(() => getMissedDoseSummary(), []);
 
   return (
-    <>
+    <div className="app-shell">
       <Sidebar activeNav="adherence" />
 
       <div className="main-area">
@@ -116,7 +116,7 @@ function Adherence() {
       </div>
 
       <MobileNav activeNav="adherence" />
-    </>
+    </div>
   );
 }
 

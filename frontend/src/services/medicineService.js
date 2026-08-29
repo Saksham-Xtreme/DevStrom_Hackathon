@@ -225,12 +225,16 @@ export function getMissedDoseSummary() {
 
 export function getExpiryAlerts(limit = 3) {
   return readMedicines()
-    .map((medicine) => ({
-      id: medicine.id,
-      name: medicine.name,
-      strength: medicine.strength,
-      daysLeft: getExpiryCategory(medicine.expiryDate).label,
-    }))
+    .map((medicine) => {
+      const expiry = getExpiryCategory(medicine.expiryDate);
+      return {
+        id: medicine.id,
+        name: medicine.name,
+        strength: medicine.strength,
+        daysLeft: expiry.label,
+        expiry,
+      };
+    })
     .slice(0, limit);
 }
 

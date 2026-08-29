@@ -8,6 +8,7 @@ import Medicines from './pages/Medicines';
 import Reminders from './pages/Reminders';
 import Adherence from './pages/Adherence';
 import Caregivers from './pages/Caregivers';
+import Reports from './pages/Reports';
 import UploadPrescription from './pages/UploadPrescription';
 
 function ProtectedRoute({ children }) {

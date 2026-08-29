@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { navItems, user } from '../data/mockData';
+import { navItems } from '../data/mockData';
 import { useAuth } from '../context/AuthContext';
 import { resetDemoData } from '../services/medicineService';
 import Icon from './Icon';
@@ -18,12 +19,15 @@ const routeByNavId = {
 
 function Sidebar({ activeNav, onNavChange }) {
   const navigate = useNavigate();
-  const { logout } = useAuth();
-  const initials = user.name
+  const { logout, user } = useAuth();
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const initials = (user?.name || 'Hem Ranjan')
     .split(' ')
     .map((part) => part[0])
     .join('')
     .slice(0, 2);
+
 
   return (
     <aside className="sidebar" aria-label="Main navigation">
@@ -50,43 +54,60 @@ function Sidebar({ activeNav, onNavChange }) {
             }}
           >
             <Icon name={item.icon} className="sidebar__link-icon" />
-            {item.label}
+            <span>{item.label}</span>
           </button>
         ))}
       </nav>
 
-      <div className="sidebar__profile" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <button type="button" className="sidebar__profile-btn" aria-label="View profile">
-          <div className="sidebar__avatar" aria-hidden="true">
-            {initials}
-          </div>
-          <div>
-            <div className="sidebar__profile-name">{user.name}</div>
-            <div className="sidebar__profile-action">View Profile</div>
-          </div>
-        </button>
-        <button 
-          type="button" 
-          className="btn btn-ghost btn-sm" 
-          style={{ width: '100%', justifyContent: 'center' }} 
-          onClick={logout}
-        >
-          Log Out
-        </button>
-        <button
-          type="button"
-          className="sidebar__demo-reset"
-          onClick={() => {
-            resetDemoData();
-            navigate('/dashboard');
-            window.location.reload();
-          }}
-        >
-          Reset Demo Data
-        </button>
+      <div className="sidebar__profile-area">
+        <div className="sidebar__profile-card">
+          <button
+            type="button"
+            className="sidebar__profile-btn"
+            aria-label="User menu"
+            onClick={() => setProfileOpen(!profileOpen)}
+          >
+            {user.avatar ? (
+              <img src={user.avatar} alt={user.name} className="sidebar__avatar-img" />
+            ) : (
+              <div className="sidebar__avatar" aria-hidden="true">
+                {initials}
+              </div>
+            )}
+            <div className="sidebar__profile-info">
+              <div className="sidebar__profile-name">{user.name}</div>
+              <div className="sidebar__profile-action">View Profile</div>
+            </div>
+            <Icon name="chevronDown" className={`sidebar__profile-arrow ${profileOpen ? 'is-open' : ''}`} />
+          </button>
+
+          {profileOpen && (
+            <div className="sidebar__profile-dropdown">
+              <button
+                type="button"
+                className="sidebar__dropdown-item"
+                onClick={logout}
+              >
+                Log Out
+              </button>
+              <button
+                type="button"
+                className="sidebar__dropdown-item sidebar__dropdown-item--danger"
+                onClick={() => {
+                  resetDemoData();
+                  navigate('/dashboard');
+                  window.location.reload();
+                }}
+              >
+                Reset Demo Data
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </aside>
   );
 }
 
 export default Sidebar;
+

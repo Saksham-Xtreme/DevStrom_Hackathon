@@ -48,28 +48,21 @@ function Header({
           <span className="header__mobile-title">MediTrack</span>
         </div>
 
-        <div className="header__text">
-          <h1>Dashboard</h1>
-          <p className="header__welcome">Welcome back, {user.greeting}! 👋</p>
-          <p className="header__subtitle">Your health, our priority.</p>
+        <div className="header__title-group">
+          <h1 className="header__title">Dashboard</h1>
         </div>
 
-        <div className="header__actions" style={{ flexWrap: 'nowrap' }}>
-          <button type="button" className="btn btn-primary header__add-btn" onClick={onAddMedicine}>
-            <Icon name="plus" />
-            <span className="header__add-label">Add Medicine</span>
-          </button>
-
+        <div className="header__actions">
           <div className="header__search-wrap">
             <Icon name="search" className="header__search-icon" />
             <label htmlFor="medicine-search" className="sr-only">
-              Search today&apos;s medicines
+              Search medicines
             </label>
             <input
               id="medicine-search"
               type="search"
               className="header__search"
-              placeholder="Search medicines..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(event) => onSearchChange(event.target.value)}
             />
@@ -78,7 +71,7 @@ function Header({
           <div className="header__notify-wrap" ref={notifyRef}>
             <button
               type="button"
-              className="icon-btn"
+              className="icon-btn header__bell-btn"
               aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
               aria-expanded={notificationsOpen}
               aria-controls={panelId}
@@ -111,6 +104,11 @@ function Header({
               </ul>
             </div>
           </div>
+
+          <button type="button" className="btn btn-primary header__add-btn" onClick={onAddMedicine}>
+            <Icon name="plus" />
+            <span className="header__add-label">Add Medicine</span>
+          </button>
         </div>
       </div>
     </header>
@@ -118,3 +116,4 @@ function Header({
 }
 
 export default Header;
+
