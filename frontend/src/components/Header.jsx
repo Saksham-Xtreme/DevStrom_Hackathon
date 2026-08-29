@@ -1,5 +1,4 @@
 import { useEffect, useId, useRef } from 'react';
-import { user } from '../data/mockData';
 import Icon from './Icon';
 import '../styles/header.css';
 

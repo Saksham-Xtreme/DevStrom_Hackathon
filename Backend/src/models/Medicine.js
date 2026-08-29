@@ -31,6 +31,21 @@ const medicineSchema = new mongoose.Schema(
             trim: true,
         },
 
+        strength: {
+            type: String,
+            trim: true,
+        },
+
+        category: {
+            type: String,
+            trim: true,
+        },
+
+        frequency: {
+            type: String,
+            trim: true,
+        },
+
         brandName: {
             type: String,
             trim: true,

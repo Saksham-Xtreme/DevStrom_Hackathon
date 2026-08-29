@@ -22,14 +22,17 @@ router.get("/google", (req, res, next) => {
     next();
 }, googleAuth);
 
-
-router.get("/google/callback", (req, res, next) => {
-    console.log("\n🔄 GOOGLE CALLBACK HIT");
-    console.log("Callback URL:", req.originalUrl);
-    console.log("Query params:", req.query);
-
-    next();
-}, googleCallback);
+// ⚠️ Passport MUST run before the controller so req.user is populated.
+router.get(
+    "/google/callback",
+    (req, res, next) => {
+        console.log("\n🔄 GOOGLE CALLBACK HIT");
+        console.log("Callback URL:", req.originalUrl);
+        next();
+    },
+    passportGoogleCallback,
+    googleCallback
+);
 
 // OAuth failure
 router.get("/login-failed", (req, res) => {

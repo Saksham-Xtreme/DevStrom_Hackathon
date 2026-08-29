@@ -233,8 +233,8 @@ export default function Settings() {
                         fontSize: 22, fontWeight: 700, color: '#fff',
                         flexShrink: 0, overflow: 'hidden',
                       }}>
-                        {user?.avatar
-                          ? <img src={user.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {user?.profileImage
+                          ? <img src={user.profileImage} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : initials}
                       </div>
                       <div style={{ flex: 1 }}>

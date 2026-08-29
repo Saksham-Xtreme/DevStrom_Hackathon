@@ -1,34 +1,9 @@
-const DEMO_PRESCRIPTION_MEDICINES = [
-  {
-    id: 'demo-1',
-    name: 'Dolo 650',
-    genericName: 'Paracetamol',
-    strength: '650 mg',
-    dose: '1 Tablet',
-    frequency: 'Twice daily',
-    times: ['08:00 AM', '08:00 PM'],
-    instructions: 'After meals',
-    durationDays: 5,
-    expiryDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    confidence: 97,
-    needsVerification: false,
-  },
-  {
-    id: 'demo-2',
-    name: 'Amoxicillin',
-    genericName: 'Amoxicillin',
-    strength: '500 mg',
-    dose: '1 Capsule',
-    frequency: 'Three times daily',
-    times: ['08:00 AM', '02:00 PM', '08:00 PM'],
-    instructions: 'Before meals',
-    durationDays: 7,
-    expiryDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-    confidence: 94,
-    needsVerification: false,
-  },
-];
+import { medicineApi } from '../api/client';
 
+// NOTE: The OCR backend endpoint is not part of this refactor.
+// We no longer return hardcoded/seeded medicines. When a real OCR
+// service is connected, replace the body of analyzePrescription with a
+// backend call. Saving always goes to MongoDB via the medicine API.
 export async function analyzePrescription(file, onProgress) {
   const steps = [
     { message: 'Uploading prescription image…', progress: 20 },
@@ -43,14 +18,38 @@ export async function analyzePrescription(file, onProgress) {
   }
 
   return {
-    medicines: DEMO_PRESCRIPTION_MEDICINES,
-    source: 'demo-sample',
-    warning: 'This is a local demo parse. Connect the backend OCR service for real prescription processing.',
+    medicines: [],
+    source: 'none',
+    warning:
+      'OCR prescription parsing is not available in this environment. Add medicines manually from the Medicines page.',
   };
 }
 
-export function saveConfirmedMedicines(medicines) {
-  const storageKey = 'meditrack_confirmed_medicines';
-  localStorage.setItem(storageKey, JSON.stringify(medicines));
+export async function saveConfirmedMedicines(medicines) {
+  if (!Array.isArray(medicines) || medicines.length === 0) {
+    return false;
+  }
+
+  await Promise.all(
+    medicines.map((medicine) =>
+      medicineApi.create({
+        name: medicine.name,
+        genericName: medicine.genericName,
+        strength: medicine.strength,
+        category: medicine.category || 'Prescription',
+        frequency: medicine.frequency,
+        dosage: medicine.strength,
+        form: medicine.form || 'tablet',
+        instructions: medicine.instructions,
+        startDate: medicine.startDate,
+        endDate: medicine.endDate || '',
+        expiryDate: medicine.expiryDate || '',
+        times: medicine.times || ['08:00 AM'],
+        dose: medicine.dose || '1 Tablet',
+        stock: medicine.stock ?? 0,
+      })
+    )
+  );
+
   return true;
 }

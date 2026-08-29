@@ -23,14 +23,14 @@ const authMiddleware = async (req, res, next) => {
         if (!user) {
             return res.status(401).json({
                 success: false,
-                message: "User not found",
+                message: "Authentication required",
             });
         }
 
         if (!user.isActive) {
-            return res.status(403).json({
+            return res.status(401).json({
                 success: false,
-                message: "Account is inactive",
+                message: "Authentication required",
             });
         }
 
@@ -42,7 +42,7 @@ const authMiddleware = async (req, res, next) => {
 
         return res.status(401).json({
             success: false,
-            message: "Invalid or expired token",
+            message: "Authentication required",
         });
     }
 };

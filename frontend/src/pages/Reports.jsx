@@ -1,48 +1,45 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav';
 import Icon from '../components/Icon';
-import { useAuth } from '../context/AuthContext';
-import {
-  getDailyDoses,
-  getWeeklyAdherenceSummary,
-  getAllMedicines,
-} from '../services/medicineService';
+import { medicineApi } from '../api/client';
+import { fetchMedicines } from '../services/medicineService';
 import '../styles/adherence.css';
 
 function Reports() {
-  const { user } = useAuth();
-  const [range, setRange] = useState('7'); // 7, 30, 90 days
+  const [range, setRange] = useState('7');
   const [search, setSearch] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [medicines, setMedicines] = useState([]);
+  const [todayDoses, setTodayDoses] = useState([]);
 
-  const medicines = useMemo(() => getAllMedicines(), []);
-  const doses = useMemo(() => getDailyDoses(), []);
-  const weekly = useMemo(() => getWeeklyAdherenceSummary(), []);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [meds, todayRes] = await Promise.all([
+          fetchMedicines().catch(() => []),
+          medicineApi.getToday().catch(() => ({ data: [] })),
+        ]);
+        setMedicines(meds);
+        setTodayDoses(todayRes.data || []);
+      } catch (err) {
+        console.error('Reports load failed:', err);
+      }
+    };
+    load();
+  }, []);
 
-  // Compute stats per medicine
-  const medicineCompliance = useMemo(() => {
-    return medicines.map((med) => {
-      // Mock some compliance stats based on real data
-      let rate = 100;
-      if (med.name === 'Calcium') rate = 90;
-      if (med.name === 'Magnesium') rate = 85;
-      return {
-        ...med,
-        complianceRate: rate,
-      };
-    });
-  }, [medicines]);
+  const takenCount = todayDoses.filter((d) => d.status === 'TAKEN').length;
+  const adherenceValue =
+    todayDoses.length > 0
+      ? Math.round((takenCount / todayDoses.length) * 100)
+      : 0;
 
-  // Filter history logs
   const filteredLogs = useMemo(() => {
     const query = search.toLowerCase().trim();
-    const allLogs = doses.map((dose, idx) => ({
+    const allLogs = todayDoses.map((dose, idx) => ({
       id: dose.id || idx,
-      date: new Date(dose.scheduledAt).toLocaleDateString([], {
-        month: 'short',
-        day: 'numeric',
-      }),
+      date: 'Today',
       time: dose.time,
       name: dose.name,
       dose: dose.dose,
@@ -50,19 +47,17 @@ function Reports() {
     }));
 
     if (!query) return allLogs;
-
     return allLogs.filter(
       (log) =>
         log.name.toLowerCase().includes(query) ||
         log.status.toLowerCase().includes(query)
     );
-  }, [doses, search]);
+  }, [todayDoses, search]);
 
   const handleExport = () => {
     setExporting(true);
     setTimeout(() => {
       setExporting(false);
-      // Simulate file download
       alert('Report exported successfully! CSV file downloaded.');
     }, 1200);
   };
@@ -74,7 +69,6 @@ function Reports() {
       <div className="main-area">
         <main className="content-scroll">
           <div className="insights-page">
-            {/* Header */}
             <header className="insights-header">
               <div>
                 <h1 className="insights-title">Adherence Reports</h1>
@@ -108,60 +102,64 @@ function Reports() {
               </div>
             </header>
 
-            {/* Quick Metrics */}
             <section className="insight-stat-grid" aria-label="Reports summary">
               <div className="insight-stat-card">
                 <span>Avg Adherence</span>
-                <strong>{weekly.adherence}%</strong>
-                <p>Across all active schedules</p>
+                <strong>{adherenceValue}%</strong>
+                <p>Across active schedules</p>
               </div>
               <div className="insight-stat-card">
-                <span>Streak</span>
-                <strong>12 Days</strong>
-                <p>Consecutive compliant days</p>
+                <span>Total Medicines</span>
+                <strong>{medicines.length}</strong>
+                <p>Tracked medications</p>
               </div>
               <div className="insight-stat-card">
                 <span>Total Tracked Doses</span>
-                <strong>{doses.length}</strong>
+                <strong>{todayDoses.length}</strong>
                 <p>Dose events monitored</p>
               </div>
             </section>
 
             <div className="insight-main-grid">
-              {/* Compliance by Medication */}
               <section className="card dose-history-card" aria-labelledby="med-compliance-title">
                 <div className="history-header">
                   <h2 id="med-compliance-title">Performance by Medication</h2>
                 </div>
 
                 <div className="history-list" style={{ gap: '16px', marginTop: '12px' }}>
-                  {medicineCompliance.map((med) => (
-                    <div key={med.id} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                        <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
-                          {med.name} <span style={{ fontWeight: '400', color: 'var(--text-secondary)' }}>({med.strength})</span>
-                        </span>
-                        <span style={{ fontWeight: '700', color: 'var(--green-primary)' }}>
-                          {med.complianceRate}%
-                        </span>
+                  {medicines.length === 0 ? (
+                    <p className="empty-copy">No medicines added yet.</p>
+                  ) : (
+                    medicines.map((med) => (
+                      <div key={med.id} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                          <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
+                            {med.name}{' '}
+                            <span style={{ fontWeight: '400', color: 'var(--text-secondary)' }}>
+                              ({med.strength})
+                            </span>
+                          </span>
+                          <span style={{ fontWeight: '700', color: 'var(--green-primary)' }}>
+                            {adherenceValue}%
+                          </span>
+                        </div>
+                        <div style={{ height: '8px', background: 'var(--green-light)', borderRadius: '4px', position: 'relative', overflow: 'hidden' }}>
+                          <div
+                            style={{
+                              height: '100%',
+                              background: 'var(--green-primary)',
+                              width: adherenceValue + '%',
+                              borderRadius: '4px',
+                              transition: 'width 0.6s ease',
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div style={{ height: '8px', background: 'var(--green-light)', borderRadius: '4px', position: 'relative', overflow: 'hidden' }}>
-                        <div
-                          style={{
-                            height: '100%',
-                            background: 'var(--green-primary)',
-                            width: `${med.complianceRate}%`,
-                            borderRadius: '4px',
-                            transition: 'width 0.6s ease'
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </section>
 
-              {/* Report Insights */}
               <section className="card dose-history-card" aria-labelledby="insights-summary-title">
                 <div className="history-header">
                   <h2 id="insights-summary-title">Report Highlights</h2>
@@ -173,7 +171,7 @@ function Reports() {
                       Highest Compliance
                     </h3>
                     <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      <strong>Multivitamin</strong> (100% adherence rate this period)
+                      {medicines[0] ? medicines[0].name : 'No medicines tracked yet'} ({adherenceValue}% adherence rate this period)
                     </p>
                   </div>
 
@@ -182,14 +180,15 @@ function Reports() {
                       Refill Status
                     </h3>
                     <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      1 prescription needs a refill check within the next week.
+                      {medicines.length === 0
+                        ? 'No refill data available yet.'
+                        : 'Review expiry dates in the Medicines page.'}
                     </p>
                   </div>
                 </div>
               </section>
             </div>
 
-            {/* Detailed Activity Logs */}
             <section className="card missed-summary-card" aria-labelledby="logs-title">
               <div className="history-header">
                 <div>
@@ -237,7 +236,7 @@ function Reports() {
                           <td style={{ padding: '12px 8px', fontWeight: '600', color: 'var(--text-primary)' }}>{log.name}</td>
                           <td style={{ padding: '12px 8px', color: 'var(--text-secondary)' }}>{log.dose}</td>
                           <td style={{ padding: '12px 8px' }}>
-                            <span className={`status-badge status-badge--${log.status}`}>
+                            <span className={'status-badge status-badge--' + log.status}>
                               {log.status}
                             </span>
                           </td>

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { mobileNavItems } from '../data/mockData';
+import { mobileNavItems } from '../config/navItems';
 import Icon from './Icon';
 import '../styles/mobile-nav.css';
 
@@ -8,7 +8,7 @@ const routeByNavId = {
   medicines: '/medicines',
   reminders: '/reminders',
   adherence: '/adherence',
-  settings: '/caregivers',
+  settings: '/settings',
 };
 
 function MobileNav({ activeNav, onNavChange }) {

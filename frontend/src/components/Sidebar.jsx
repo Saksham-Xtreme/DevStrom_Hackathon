@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { navItems } from '../data/mockData';
+import { navItems } from '../config/navItems';
 import { useAuth } from '../context/AuthContext';
-import { resetDemoData } from '../services/medicineService';
 import Icon from './Icon';
 import '../styles/sidebar.css';
 
@@ -22,12 +21,13 @@ function Sidebar({ activeNav, onNavChange }) {
   const { logout, user } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const initials = (user?.name || 'Hem Ranjan')
+  const displayName = user?.name || 'MediTrack User';
+  const initials = displayName
     .split(' ')
     .map((part) => part[0])
     .join('')
-    .slice(0, 2);
-
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <aside className="sidebar" aria-label="Main navigation">
@@ -67,15 +67,15 @@ function Sidebar({ activeNav, onNavChange }) {
             aria-label="User menu"
             onClick={() => setProfileOpen(!profileOpen)}
           >
-            {user.avatar ? (
-              <img src={user.avatar} alt={user.name} className="sidebar__avatar-img" />
+            {user?.profileImage ? (
+              <img src={user.profileImage} alt={displayName} className="sidebar__avatar-img" />
             ) : (
               <div className="sidebar__avatar" aria-hidden="true">
                 {initials}
               </div>
             )}
             <div className="sidebar__profile-info">
-              <div className="sidebar__profile-name">{user.name}</div>
+              <div className="sidebar__profile-name">{displayName}</div>
               <div className="sidebar__profile-action">View Profile</div>
             </div>
             <Icon name="chevronDown" className={`sidebar__profile-arrow ${profileOpen ? 'is-open' : ''}`} />
@@ -90,17 +90,6 @@ function Sidebar({ activeNav, onNavChange }) {
               >
                 Log Out
               </button>
-              <button
-                type="button"
-                className="sidebar__dropdown-item sidebar__dropdown-item--danger"
-                onClick={() => {
-                  resetDemoData();
-                  navigate('/dashboard');
-                  window.location.reload();
-                }}
-              >
-                Reset Demo Data
-              </button>
             </div>
           )}
         </div>
@@ -110,4 +99,3 @@ function Sidebar({ activeNav, onNavChange }) {
 }
 
 export default Sidebar;
-

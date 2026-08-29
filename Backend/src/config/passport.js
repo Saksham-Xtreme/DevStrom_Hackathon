@@ -1,7 +1,7 @@
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
-const User = require("../models/User");
+const { findOrCreateGoogleUser } = require("../modules/auth/auth.service");
 
 console.log("🔵 Loading passport configuration...");
 console.log("🔵 GOOGLE_CLIENT_ID exists:", !!process.env.GOOGLE_CLIENT_ID);
@@ -27,79 +27,16 @@ passport.use(
             );
 
             try {
-                const email = profile?.emails?.[0]?.value;
-
-                if (!email) {
-                    console.log("❌ No email returned by Google");
-                    return done(new Error("Google account has no email"));
-                }
-
-                console.log("🔎 Searching for existing user...");
-
-                let user = await User.findOne({
-                    googleId: profile.id,
-                });
-
-                console.log(
-                    "User found by googleId:",
-                    !!user
-                );
-
-                if (!user) {
-                    console.log("🔎 Searching by email...");
-
-                    user = await User.findOne({
-                        email: email.toLowerCase(),
-                    });
-
-                    console.log(
-                        "User found by email:",
-                        !!user
-                    );
-                }
-
-                if (!user) {
-                    console.log("🆕 Creating new user...");
-
-                    user = await User.create({
-                        email: email.toLowerCase(),
-                        name: profile.displayName,
-                        googleId: profile.id,
-                        authProvider: "google",
-                        emailVerified: true,
-                        profileImage:
-                            profile.photos?.[0]?.value || null,
-                        lastLoginAt: new Date(),
-                    });
-
-                    console.log(
-                        "✅ New user created:",
-                        user._id
-                    );
-                } else {
-                    console.log(
-                        "👤 Existing user:",
-                        user._id
-                    );
-
-                    user.googleId = profile.id;
-                    user.authProvider = "google";
-                    user.emailVerified = true;
-                    user.lastLoginAt = new Date();
-
-                    await user.save();
-
-                    console.log("✅ Existing user updated");
-                }
+                const user = await findOrCreateGoogleUser(profile);
 
                 console.log("✅ Passport authentication successful");
+                console.log("User ID:", user._id);
                 console.log("================================================\n");
 
                 return done(null, user);
-
             } catch (error) {
                 console.error("\n❌ GOOGLE STRATEGY ERROR");
-                console.error(error);
+                console.error(error.message);
                 console.error("================================================\n");
 
                 return done(error);

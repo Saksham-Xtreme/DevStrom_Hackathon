@@ -1,22 +1,47 @@
-import { useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav';
 import { useAuth } from '../context/AuthContext';
-import { caregiver } from '../data/mockData';
-import {
-  getCaregiverAlerts,
-  getDoseActivity,
-  getExpiryAlerts,
-  getWeeklyAdherenceSummary,
-} from '../services/medicineService';
+import { medicineApi } from '../api/client';
 import '../styles/adherence.css';
 
 function Caregivers() {
   const { user } = useAuth();
-  const weekly = useMemo(() => getWeeklyAdherenceSummary(), []);
-  const alerts = useMemo(() => getCaregiverAlerts(), []);
-  const activity = useMemo(() => getDoseActivity(8), []);
-  const expiryAlerts = useMemo(() => getExpiryAlerts(3), []);
+  const [todayDoses, setTodayDoses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await medicineApi.getToday().catch(() => ({ data: [] }));
+        setTodayDoses(response.data || []);
+      } catch (err) {
+        console.error('Caregiver load failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const takenCount = todayDoses.filter((d) => d.status === 'TAKEN').length;
+  const missedCount = todayDoses.filter((d) =>
+    ['MISSED', 'SKIPPED'].includes(d.status)
+  ).length;
+  const adherenceValue =
+    todayDoses.length > 0
+      ? Math.round((takenCount / todayDoses.length) * 100)
+      : 0;
+
+  const patientName = user?.name || 'MediTrack User';
+
+  const activity = useMemo(
+    () =>
+      todayDoses
+        .filter((d) => ['TAKEN', 'MISSED', 'SKIPPED'].includes(d.status))
+        .slice(0, 8),
+    [todayDoses]
+  );
 
   return (
     <div className="app-shell">
@@ -35,38 +60,32 @@ function Caregivers() {
             </header>
 
             <section className="caregiver-profile-band">
-              <div className="caregiver-profile-avatar" aria-hidden="true">
-                {caregiver.name
-                  .split(' ')
-                  .map((part) => part[0])
-                  .join('')
-                  .slice(0, 2)}
-              </div>
+              <div className="caregiver-profile-avatar" aria-hidden="true">—</div>
               <div>
-                <span className="caregiver-kicker">Connected Caregiver</span>
-                <h2>{caregiver.name}</h2>
-                <p>{caregiver.relation} - {caregiver.status}</p>
+                <span className="caregiver-kicker">No caregiver connected</span>
+                <h2>Connect a caregiver</h2>
+                <p>Link a family member or helper to share this patient’s progress.</p>
               </div>
               <div className="caregiver-patient-chip">
-                Patient: {user?.name || 'Hem Ranjan'}
+                Patient: {patientName}
               </div>
             </section>
 
             <section className="insight-stat-grid" aria-label="Caregiver summary">
               <div className="insight-stat-card">
                 <span>Weekly Adherence</span>
-                <strong>{weekly.adherence}%</strong>
-                <p>{weekly.taken}/{weekly.total} doses taken</p>
+                <strong>{adherenceValue}%</strong>
+                <p>{takenCount}/{todayDoses.length || 0} doses taken</p>
               </div>
               <div className="insight-stat-card">
                 <span>Missed or Skipped</span>
-                <strong>{weekly.missed + weekly.skipped}</strong>
+                <strong>{missedCount}</strong>
                 <p>Last 7 days</p>
               </div>
               <div className="insight-stat-card">
                 <span>Expiry Alerts</span>
-                <strong>{expiryAlerts.length}</strong>
-                <p>Medicines requiring review</p>
+                <strong>—</strong>
+                <p>Not available yet</p>
               </div>
             </section>
 
@@ -74,16 +93,10 @@ function Caregivers() {
               <section className="card caregiver-alert-card" aria-labelledby="caregiver-alerts-title">
                 <div className="history-header">
                   <h2 id="caregiver-alerts-title">Caregiver Alerts</h2>
-                  <span>{alerts.length} active</span>
+                  <span>0 active</span>
                 </div>
-
                 <div className="alert-list">
-                  {alerts.map((alert) => (
-                    <article key={alert.id} className={`care-alert care-alert--${alert.tone}`}>
-                      <h3>{alert.title}</h3>
-                      <p>{alert.message}</p>
-                    </article>
-                  ))}
+                  <p className="empty-copy">No caregiver alerts yet.</p>
                 </div>
               </section>
 
@@ -94,24 +107,15 @@ function Caregivers() {
                 </div>
 
                 <div className="history-list">
-                  {activity.length === 0 ? (
+                  {!loading && activity.length === 0 ? (
                     <p className="empty-copy">No dose activity has been recorded yet.</p>
                   ) : (
                     activity.map((item) => (
                       <article key={item.id} className="history-row">
                         <div>
-                          <span className="history-time">
-                            {item.updatedAt
-                              ? new Date(item.updatedAt).toLocaleString([], {
-                                  month: 'short',
-                                  day: 'numeric',
-                                  hour: 'numeric',
-                                  minute: '2-digit',
-                                })
-                              : 'Not recorded'}
-                          </span>
+                          <span className="history-time">{item.time}</span>
                           <h3>{item.name || 'Dose update'}</h3>
-                          <p>{item.time || 'Scheduled dose'} - {item.instructions || 'No notes'}</p>
+                          <p>{item.instructions || 'No notes'}</p>
                         </div>
                         <span className={`status-badge status-badge--${item.status}`}>
                           {item.status}

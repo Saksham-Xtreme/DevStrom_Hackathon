@@ -17,5 +17,9 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+    rules: {
+      // Data fetching in effects (setState after await) is intentional here.
+      'react-hooks/set-state-in-effect': 'off',
+    },
   },
 ])

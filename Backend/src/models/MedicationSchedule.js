@@ -50,3 +50,8 @@ const medicationScheduleSchema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+module.exports = mongoose.model(
+    "MedicationSchedule",
+    medicationScheduleSchema
+);

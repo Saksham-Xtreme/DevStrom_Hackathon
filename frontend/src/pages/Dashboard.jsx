@@ -1,16 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { medicineApi } from '../api/client';
 import {
-  caregiver,
-  nextRefill,
-  notifications as initialNotifications,
-  stats as initialStats,
-} from '../data/mockData';
-import {
-  getDailyDoses,
-  getWeeklyAdherenceSummary,
-  updateDoseStatus,
+  fetchMedicines,
+  getExpiryCategory,
 } from '../services/medicineService';
 import Header from '../components/Header';
 import Icon from '../components/Icon';
@@ -22,11 +16,13 @@ import '../styles/dashboard.css';
 function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [schedule, setSchedule] = useState(() => getDailyDoses());
+
+  const [todayDoses, setTodayDoses] = useState([]);
+  const [medicines, setMedicines] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [notifications] = useState(initialNotifications);
   const [timeRange, setTimeRange] = useState('This Week');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -36,53 +32,90 @@ function Dashboard() {
     }
   }, []);
 
-  const filteredSchedule = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return schedule;
-
-    return schedule.filter((medicine) => {
-      const haystack = `${medicine.name} ${medicine.strength || ''} ${medicine.instructions || ''} ${medicine.time}`.toLowerCase();
-      return haystack.includes(query);
-    });
-  }, [schedule, searchQuery]);
-
-  const liveStats = useMemo(() => {
-    const doseStats = {
-      total: schedule.length,
-      taken: schedule.filter((dose) => dose.status === 'taken').length,
-      missed: schedule.filter((dose) => dose.status === 'missed').length,
-      skipped: schedule.filter((dose) => dose.status === 'skipped').length,
-      upcoming: schedule.filter((dose) => dose.status === 'upcoming').length,
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [todayRes, meds] = await Promise.all([
+          medicineApi.getToday().catch(() => ({ data: [] })),
+          fetchMedicines().catch(() => []),
+        ]);
+        setTodayDoses(todayRes.data || []);
+        setMedicines(meds);
+      } catch (err) {
+        console.error('Dashboard load failed:', err);
+      } finally {
+        setLoading(false);
+      }
     };
+    load();
+  }, []);
 
-    return initialStats.map((stat) => {
-      if (stat.id === 'today') {
-        return { ...stat, value: doseStats.total || 3 };
-      }
-      if (stat.id === 'taken') {
-        return { ...stat, value: doseStats.taken || 3 };
-      }
-      if (stat.id === 'missed') {
-        return { ...stat, value: doseStats.missed + doseStats.skipped };
-      }
-      if (stat.id === 'adherence') {
-        return { ...stat, value: '95%' };
-      }
-      return stat;
-    });
-  }, [schedule]);
+  const firstName = user?.name?.split(' ')[0] || 'User';
 
-  const weeklySummary = getWeeklyAdherenceSummary();
+  const takenCount = todayDoses.filter((d) => d.status === 'TAKEN').length;
+  const handledCount = todayDoses.filter((d) =>
+    ['TAKEN', 'MISSED', 'SKIPPED'].includes(d.status)
+  ).length;
+  const missedCount = todayDoses.filter((d) =>
+    ['MISSED', 'SKIPPED'].includes(d.status)
+  ).length;
+  const adherenceValue =
+    todayDoses.length > 0
+      ? `${Math.round((takenCount / todayDoses.length) * 100)}%`
+      : '—';
 
-  function handleTakeDose(id) {
-    updateDoseStatus(id, 'taken');
-    setSchedule(getDailyDoses());
-  }
+  const liveStats = [
+    {
+      id: 'today',
+      label: "Today's Medicines",
+      value: todayDoses.length,
+      subtitle: 'Scheduled doses',
+      tone: 'primary',
+      icon: 'calendar',
+    },
+    {
+      id: 'taken',
+      label: 'Taken',
+      value: takenCount,
+      subtitle: 'Doses completed',
+      tone: 'taken',
+      icon: 'check',
+    },
+    {
+      id: 'missed',
+      label: 'Missed',
+      value: missedCount,
+      subtitle: 'Doses missed',
+      tone: 'missed',
+      icon: 'cross',
+    },
+    {
+      id: 'adherence',
+      label: 'Adherence',
+      value: adherenceValue,
+      subtitle: 'Today',
+      tone: 'adherence',
+      icon: 'link',
+      hasSparkline: true,
+    },
+  ];
 
-  function handleSkipDose(id) {
-    updateDoseStatus(id, 'skipped');
-    setSchedule(getDailyDoses());
-  }
+  const filteredSchedule = todayDoses.filter((medicine) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    const haystack = `${medicine.name} ${medicine.strength || ''} ${medicine.instructions || ''} ${medicine.time}`.toLowerCase();
+    return haystack.includes(query);
+  });
+
+  // Real next-refill: medicine with the soonest expiry among active medicines.
+  const refillCandidate = medicines
+    .map((m) => ({ medicine: m, expiry: getExpiryCategory(m.expiryDate) }))
+    .filter((x) => x.expiry.type !== 'unknown')
+    .sort((a, b) => {
+      const da = parseInt(a.expiry.label) || 9999;
+      const db = parseInt(b.expiry.label) || 9999;
+      return da - db;
+    })[0];
 
   function handleAddMedicine() {
     navigate('/medicines');
@@ -98,19 +131,17 @@ function Dashboard() {
           onSearchChange={setSearchQuery}
           notificationsOpen={notificationsOpen}
           onToggleNotifications={setNotificationsOpen}
-          notifications={notifications}
+          notifications={[]}
           onAddMedicine={handleAddMedicine}
         />
 
         <main className="content-scroll">
           <div className="dashboard-shell">
-            {/* Greeting Banner */}
             <section className="dashboard-welcome">
-              <h2>Welcome back, {user?.greeting || user?.name?.split(' ')[0] || 'User'}! 👋</h2>
+              <h2>Welcome back, {firstName}! 👋</h2>
               <p>Your health, our priority.</p>
             </section>
 
-            {/* Top 4 Stat Cards */}
             <section className="stats-row" aria-label="Medication statistics">
               {liveStats.map((stat) => (
                 <StatCard
@@ -125,9 +156,7 @@ function Dashboard() {
               ))}
             </section>
 
-            {/* Middle Section: Today's Schedule + Adherence Overview + Caregiver / Refill */}
             <div className="dashboard-panel-grid">
-              {/* Today's Schedule Panel */}
               <section className="card schedule-panel" aria-labelledby="schedule-title">
                 <div className="panel-header">
                   <h2 id="schedule-title">Today's Schedule</h2>
@@ -137,8 +166,14 @@ function Dashboard() {
                 </div>
 
                 <div className="schedule-list">
-                  {filteredSchedule.length === 0 ? (
-                    <div className="schedule-empty">No medicines match your search.</div>
+                  {loading ? (
+                    <div className="schedule-empty">Loading your schedule…</div>
+                  ) : filteredSchedule.length === 0 ? (
+                    <div className="schedule-empty">
+                      {todayDoses.length === 0
+                        ? 'No doses scheduled for today. Add a medicine to get started.'
+                        : 'No medicines match your search.'}
+                    </div>
                   ) : (
                     filteredSchedule.map((medicine) => (
                       <div key={medicine.id} className="schedule-item">
@@ -151,8 +186,8 @@ function Dashboard() {
                         </div>
 
                         <div className="schedule-item__right">
-                          <span className={`status-badge status-badge--${medicine.status || 'taken'}`}>
-                            {medicine.status ? medicine.status.charAt(0).toUpperCase() + medicine.status.slice(1) : 'Taken'}
+                          <span className={`status-badge status-badge--${medicine.status || 'upcoming'}`}>
+                            {medicine.status ? medicine.status.charAt(0).toUpperCase() + medicine.status.slice(1) : 'Upcoming'}
                           </span>
                         </div>
                       </div>
@@ -161,7 +196,6 @@ function Dashboard() {
                 </div>
               </section>
 
-              {/* Adherence Overview Wave Chart Panel */}
               <section className="card adherence-panel" aria-labelledby="adherence-title">
                 <div className="panel-header">
                   <h2 id="adherence-title">Adherence Overview</h2>
@@ -194,19 +228,16 @@ function Dashboard() {
                         </linearGradient>
                       </defs>
 
-                      {/* Subtle horizontal grid lines */}
                       <line x1="0" y1="10" x2="400" y2="10" stroke="#ebf2ee" strokeDasharray="3 3" />
                       <line x1="0" y1="40" x2="400" y2="40" stroke="#ebf2ee" strokeDasharray="3 3" />
                       <line x1="0" y1="70" x2="400" y2="70" stroke="#ebf2ee" strokeDasharray="3 3" />
                       <line x1="0" y1="100" x2="400" y2="100" stroke="#ebf2ee" strokeDasharray="3 3" />
 
-                      {/* Wave Fill Area */}
                       <path
                         d="M 10,50 C 40,25 70,25 105,50 C 140,75 165,20 200,20 C 235,20 265,65 295,55 C 325,45 355,20 390,20 L 390,120 L 10,120 Z"
                         fill="url(#waveGradient)"
                       />
 
-                      {/* Wave Line */}
                       <path
                         d="M 10,50 C 40,25 70,25 105,50 C 140,75 165,20 200,20 C 235,20 265,65 295,55 C 325,45 355,20 390,20"
                         fill="none"
@@ -215,7 +246,6 @@ function Dashboard() {
                         strokeLinecap="round"
                       />
 
-                      {/* Wave Nodes */}
                       <circle cx="10" cy="50" r="3.5" fill="#107c56" />
                       <circle cx="105" cy="50" r="3.5" fill="#107c56" />
                       <circle cx="200" cy="20" r="3.5" fill="#107c56" />
@@ -236,20 +266,15 @@ function Dashboard() {
                 </div>
               </section>
 
-              {/* Right Side Stack: Caregiver & Next Refill */}
               <div className="dashboard-side-stack">
                 <section className="card caregiver-panel" aria-labelledby="caregiver-title">
                   <p className="caregiver-panel__label">Caregiver</p>
                   <div className="caregiver-panel__body">
-                    {caregiver.avatar ? (
-                      <img src={caregiver.avatar} alt={caregiver.name} className="caregiver-panel__avatar" />
-                    ) : (
-                      <div className="caregiver-panel__avatar-fallback">RK</div>
-                    )}
+                    <div className="caregiver-panel__avatar-fallback">—</div>
                     <div>
-                      <p className="caregiver-panel__sub">Connected to</p>
+                      <p className="caregiver-panel__sub">Not connected</p>
                       <h3 id="caregiver-title" className="caregiver-panel__name">
-                        {caregiver.name} ({caregiver.relation})
+                        No caregiver yet
                       </h3>
                     </div>
                   </div>
@@ -258,15 +283,24 @@ function Dashboard() {
                     className="btn caregiver-panel__btn"
                     onClick={() => navigate('/caregivers')}
                   >
-                    Message
+                    Connect
                   </button>
                 </section>
 
                 <section className="card refill-panel" aria-labelledby="refill-title">
                   <div className="refill-panel__info">
                     <h3 id="refill-title">Next Refill</h3>
-                    <h4>{nextRefill.name}</h4>
-                    <p>{nextRefill.daysLeft}</p>
+                    {refillCandidate ? (
+                      <>
+                        <h4>{refillCandidate.medicine.name}</h4>
+                        <p>{refillCandidate.expiry.label}</p>
+                      </>
+                    ) : (
+                      <>
+                        <h4>No medicine</h4>
+                        <p>Add medicines to track refills</p>
+                      </>
+                    )}
                   </div>
                   <div className="refill-panel__icon">
                     <Icon name="calendar" />
@@ -275,25 +309,24 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Bottom Row: Weekly Summary + Reminder */}
             <div className="bottom-panel-grid">
               <section className="card summary-panel" aria-labelledby="summary-title">
                 <div className="panel-header">
                   <h2 id="summary-title">Weekly Summary</h2>
-                  <span className="date-pill">Apr 20 - Apr 26</span>
+                  <span className="date-pill">This week</span>
                 </div>
 
                 <div className="summary-metrics">
                   <div className="summary-metric">
-                    <span className="summary-metric__val">21</span>
+                    <span className="summary-metric__val">{takenCount}</span>
                     <span className="summary-metric__lbl">Doses Taken</span>
                   </div>
                   <div className="summary-metric">
-                    <span className="summary-metric__val">0</span>
+                    <span className="summary-metric__val">{missedCount}</span>
                     <span className="summary-metric__lbl">Doses Missed</span>
                   </div>
                   <div className="summary-metric">
-                    <span className="summary-metric__val">95%</span>
+                    <span className="summary-metric__val">{adherenceValue}</span>
                     <span className="summary-metric__lbl">Adherence</span>
                   </div>
                 </div>
@@ -309,32 +342,21 @@ function Dashboard() {
                     <h2 id="reminder-title">Reminder</h2>
                   </div>
                   <p className="reminder-panel__text">
-                    You have 1 medicine due in next 30 mins.
+                    {todayDoses.length === 0
+                      ? 'No doses scheduled for today.'
+                      : `${todayDoses.length - handledCount} dose(s) still need attention today.`}
                   </p>
                 </div>
 
-                {/* Botanical Plant Art */}
                 <svg
                   viewBox="0 0 160 160"
                   className="reminder-botanical-art"
                   fill="none"
                   aria-hidden="true"
                 >
-                  <path
-                    d="M 120 160 C 100 110, 60 90, 20 140 C 40 90, 100 70, 140 160 Z"
-                    fill="#107c56"
-                    opacity="0.22"
-                  />
-                  <path
-                    d="M 140 160 C 120 80, 70 40, 30 110 C 70 60, 120 40, 155 160 Z"
-                    fill="#107c56"
-                    opacity="0.3"
-                  />
-                  <path
-                    d="M 160 160 C 130 60, 90 10, 60 80 C 100 30, 145 10, 160 160 Z"
-                    fill="#289b72"
-                    opacity="0.25"
-                  />
+                  <path d="M 120 160 C 100 110, 60 90, 20 140 C 40 90, 100 70, 140 160 Z" fill="#107c56" opacity="0.22" />
+                  <path d="M 140 160 C 120 80, 70 40, 30 110 C 70 60, 120 40, 155 160 Z" fill="#107c56" opacity="0.3" />
+                  <path d="M 160 160 C 130 60, 90 10, 60 80 C 100 30, 145 10, 160 160 Z" fill="#289b72" opacity="0.25" />
                 </svg>
               </section>
             </div>
@@ -348,4 +370,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-

@@ -1,23 +1,43 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Sidebar from '../components/Sidebar';
 import MobileNav from '../components/MobileNav';
 import MedicineCard from '../components/MedicineCard';
 import AddMedicineModal from '../components/AddMedicineModal';
 import Icon from '../components/Icon';
 import {
-  getAllMedicines,
-  saveMedicine,
+  fetchMedicines,
+  createMedicine,
+  updateMedicine,
   deleteMedicine,
   getExpiryCategory,
 } from '../services/medicineService';
 import '../styles/medicines.css';
 
 function Medicines() {
-  const [medicines, setMedicines] = useState(getAllMedicines);
+  const [medicines, setMedicines] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMed, setEditingMed] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const loadMedicines = async () => {
+    try {
+      const data = await fetchMedicines();
+      setMedicines(data);
+    } catch (err) {
+      console.error('Failed to load medicines:', err);
+      setError('Unable to load your medicines.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMedicines();
+  }, []);
 
   const filteredMedicines = useMemo(() => {
     return medicines.filter((med) => {
@@ -39,16 +59,33 @@ function Medicines() {
     });
   }, [medicines, search, filter]);
 
-  const handleSaveMed = (data) => {
-    const updated = saveMedicine(data);
-    setMedicines(updated);
-    setEditingMed(null);
+  const handleSaveMed = async (data) => {
+    setSaving(true);
+    try {
+      if (data.id) {
+        await updateMedicine(data.id, data);
+      } else {
+        await createMedicine(data);
+      }
+      await loadMedicines();
+      setEditingMed(null);
+    } catch (err) {
+      console.error('Save medicine failed:', err);
+      alert('Unable to save the medicine. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDeleteMed = (id) => {
+  const handleDeleteMed = async (id) => {
     if (window.confirm('Are you sure you want to remove this medication?')) {
-      const updated = deleteMedicine(id);
-      setMedicines(updated);
+      try {
+        await deleteMedicine(id);
+        await loadMedicines();
+      } catch (err) {
+        console.error('Delete medicine failed:', err);
+        alert('Unable to delete the medicine.');
+      }
     }
   };
 
@@ -79,6 +116,7 @@ function Medicines() {
                   setEditingMed(null);
                   setIsModalOpen(true);
                 }}
+                disabled={saving}
               >
                 <Icon name="plus" /> Add Medication
               </button>
@@ -90,7 +128,7 @@ function Medicines() {
                 <input
                   type="text"
                   className="meds-search-input"
-                  placeholder="Search medications..."
+                  placeholder="Search your medicines..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -106,18 +144,14 @@ function Medicines() {
                 </button>
                 <button
                   type="button"
-                  className={`filter-tab ${
-                    filter === 'expiring' ? 'active' : ''
-                  }`}
+                  className={`filter-tab ${filter === 'expiring' ? 'active' : ''}`}
                   onClick={() => setFilter('expiring')}
                 >
                   Expiring Soon
                 </button>
                 <button
                   type="button"
-                  className={`filter-tab ${
-                    filter === 'expired' ? 'active' : ''
-                  }`}
+                  className={`filter-tab ${filter === 'expired' ? 'active' : ''}`}
                   onClick={() => setFilter('expired')}
                 >
                   Expired
@@ -125,7 +159,20 @@ function Medicines() {
               </div>
             </div>
 
-            {filteredMedicines.length === 0 ? (
+            {loading && (
+              <div className="meds-empty-state card">
+                <p style={{ color: 'var(--text-secondary)', margin: 0 }}>Loading your medicines…</p>
+              </div>
+            )}
+
+            {!loading && error && (
+              <div className="meds-empty-state card">
+                <Icon name="alert" style={{ fontSize: '32px', color: 'var(--status-missed-text)' }} />
+                <h3 style={{ margin: '12px 0 6px' }}>{error}</h3>
+              </div>
+            )}
+
+            {!loading && !error && filteredMedicines.length === 0 && (
               <div className="meds-empty-state card">
                 <Icon
                   name="pill"
@@ -133,10 +180,14 @@ function Medicines() {
                 />
                 <h3 style={{ margin: '12px 0 6px' }}>No medications found</h3>
                 <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
-                  Try adjusting your search or add a new medicine.
+                  {medicines.length === 0
+                    ? 'You have not added any medicines yet. Click "Add Medication" to get started.'
+                    : 'Try adjusting your search or filters.'}
                 </p>
               </div>
-            ) : (
+            )}
+
+            {!loading && !error && filteredMedicines.length > 0 && (
               <div className="meds-grid">
                 {filteredMedicines.map((med) => (
                   <MedicineCard

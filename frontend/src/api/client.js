@@ -26,27 +26,14 @@ client.interceptors.request.use(
   }
 );
 
-export const medicineApi = {
-  search: (query, limit = 10) =>
-    client.get('/api/medicines/search', {
-      params: {
-        q: query,
-        limit,
-      },
-    }),
-
-  getDrugDetails: (sctId) =>
-    client.get(`/api/medicines/drug/${sctId}`),
-};
-
 // Response Interceptor: Globally handle authentication errors (e.g. 401 token expired)
 client.interceptors.response.use(
   (response) => response.data,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Token expired or invalid: Clear local storage and redirect to login if appropriate
+      // Token expired or invalid: clear local storage and notify the app.
       localStorage.removeItem('token');
-      // Option: window.location.href = '/login';
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
     }
     return Promise.reject(error.response?.data || error.message || error);
   }
@@ -62,38 +49,42 @@ export const authApi = {
 
   // Get the currently authenticated MongoDB user
   getCurrentUser: () => client.get('/api/auth/me'),
-
-  // Email/password login - future
-  login: (email, password) =>
-    client.post('/api/auth/login', { email, password }),
-
-  // OTP - future
-  sendOtp: (email) =>
-    client.post('/api/auth/send-otp', { email }),
-
-  // OTP verification - future
-  verifyOtp: (email, otp) =>
-    client.post('/api/auth/verify-otp', { email, otp }),
 };
 
-// Prescription endpoints helper (Planned)
-export const prescriptionApi = {
-  upload: (formData) => {
-    return client.post('/api/prescriptions/upload', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
+// Medicine endpoints helper (MongoDB-backed, user-scoped)
+export const medicineApi = {
+  search: (query, limit = 10) =>
+    client.get('/api/medicines/search', {
+      params: {
+        q: query,
+        limit,
       },
-    });
-  },
-  getStatus: (id) => client.get(`/api/prescriptions/${id}/status`),
-  confirm: (id, data) => client.post(`/api/prescriptions/${id}/confirm`, data),
+    }),
+
+  getDrugDetails: (sctId) =>
+    client.get(`/api/medicines/drug/${sctId}`),
+
+  list: () => client.get('/api/medicines'),
+
+  getOne: (id) => client.get(`/api/medicines/${id}`),
+
+  create: (payload) => client.post('/api/medicines', payload),
+
+  update: (id, payload) => client.put(`/api/medicines/${id}`, payload),
+
+  remove: (id) => client.delete(`/api/medicines/${id}`),
+
+  getToday: () => client.get('/api/medicines/today'),
+
+  logDose: (scheduleId, status) =>
+    client.post(`/api/medicines/today/${scheduleId}/log`, { status }),
 };
 
-// Dose adherence endpoints helper (Planned)
+// Dose adherence endpoints helper (planned / partial)
 export const doseApi = {
-  getTodayDoses: () => client.get('/api/doses/today'),
-  markTaken: (id) => client.post(`/api/doses/${id}/taken`),
-  markMissed: (id, reason) => client.post(`/api/doses/${id}/missed`, { reason }),
+  getTodayDoses: () => client.get('/api/medicines/today'),
+  markTaken: (id) => client.post(`/api/medicines/today/${id}/log`, { status: 'TAKEN' }),
+  markMissed: (id) => client.post(`/api/medicines/today/${id}/log`, { status: 'MISSED' }),
   getAdherenceSummary: () => client.get('/api/adherence/summary'),
 };
 

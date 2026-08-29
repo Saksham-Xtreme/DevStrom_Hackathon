@@ -16,6 +16,22 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    try {
+      const response = await authApi.getCurrentUser();
+      setUser(response.user);
+      setIsAuthenticated(true);
+      setHasCompletedOnboarding(true);
+      return true;
+    } catch {
+      localStorage.removeItem('token');
+      setUser(null);
+      setIsAuthenticated(false);
+      setHasCompletedOnboarding(false);
+      return false;
+    }
+  };
+
   useEffect(() => {
     const initializeAuth = async () => {
       try {
@@ -43,17 +59,10 @@ export function AuthProvider({ children }) {
         }
 
         // Ask backend for the actual logged-in user
-        const response = await authApi.getCurrentUser();
-
-        setUser(response.user);
-        setIsAuthenticated(true);
-        setHasCompletedOnboarding(true);
+        await refreshUser();
       } catch (error) {
         console.error('Authentication initialization failed:', error);
-
-        // Invalid/expired token
         localStorage.removeItem('token');
-
         setUser(null);
         setIsAuthenticated(false);
         setHasCompletedOnboarding(false);
@@ -65,17 +74,17 @@ export function AuthProvider({ children }) {
     initializeAuth();
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-    setHasCompletedOnboarding(true);
-  };
+  // React to mid-session token expiry/invalidation
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setIsAuthenticated(false);
+      setHasCompletedOnboarding(false);
+    };
 
-  const signup = (userData) => {
-    setUser(userData);
-    setIsAuthenticated(true);
-    setHasCompletedOnboarding(false);
-  };
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, []);
 
   const completeOnboarding = () => {
     setHasCompletedOnboarding(true);
@@ -96,8 +105,7 @@ export function AuthProvider({ children }) {
         hasCompletedOnboarding,
         user,
         loading,
-        login,
-        signup,
+        refreshUser,
         completeOnboarding,
         logout,
       }}

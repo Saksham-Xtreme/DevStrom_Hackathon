@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
 import GoogleAuthButton from '../components/GoogleAuthButton';
 import Icon from '../components/Icon';
 import { startGoogleAuth } from '../services/googleAuthService';
@@ -12,33 +11,19 @@ function Signup() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-
-  const { signup } = useAuth();
-  const navigate = useNavigate();
+  const [authError, setAuthError] = useState('');
 
   const handleNext = (event) => {
     event?.preventDefault?.();
-
     if (step < 3) {
       setStep(step + 1);
-      return;
     }
-
-    signup();
-    navigate('/onboarding');
-  };
-
-  const handleQuickSignup = () => {
-    signup();
-    navigate('/onboarding');
   };
 
   const handleGoogleSignup = () => {
     const redirected = startGoogleAuth('signup');
-
     if (!redirected) {
-      signup({ provider: 'google' });
-      navigate('/onboarding');
+      setAuthError('Unable to start Google sign-in. Please try again.');
     }
   };
 
@@ -63,6 +48,12 @@ function Signup() {
             </p>
           </div>
 
+          {authError && (
+            <div className="auth-error-banner" role="alert">
+              {authError}
+            </div>
+          )}
+
           <GoogleAuthButton label="Continue with Google" onClick={handleGoogleSignup} />
 
           <div className="auth-or-divider">OR</div>
@@ -76,11 +67,7 @@ function Signup() {
             </div>
 
             <div className="stepper-step">
-              <div
-                className={`step-circle ${
-                  step === 1 ? 'step-circle--active' : step > 1 ? 'step-circle--completed' : ''
-                }`}
-              >
+              <div className={`step-circle ${step === 1 ? 'step-circle--active' : step > 1 ? 'step-circle--completed' : ''}`}>
                 {step > 1 ? 'OK' : '1'}
               </div>
               <span className={`step-label ${step === 1 ? 'step-label--active' : ''}`}>
@@ -89,11 +76,7 @@ function Signup() {
             </div>
 
             <div className="stepper-step">
-              <div
-                className={`step-circle ${
-                  step === 2 ? 'step-circle--active' : step > 2 ? 'step-circle--completed' : ''
-                }`}
-              >
+              <div className={`step-circle ${step === 2 ? 'step-circle--active' : step > 2 ? 'step-circle--completed' : ''}`}>
                 {step > 2 ? 'OK' : '2'}
               </div>
               <span className={`step-label ${step === 2 ? 'step-label--active' : ''}`}>
@@ -102,9 +85,7 @@ function Signup() {
             </div>
 
             <div className="stepper-step">
-              <div className={`step-circle ${step === 3 ? 'step-circle--active' : ''}`}>
-                3
-              </div>
+              <div className={`step-circle ${step === 3 ? 'step-circle--active' : ''}`}>3</div>
               <span className={`step-label ${step === 3 ? 'step-label--active' : ''}`}>
                 Create your password
               </span>
@@ -188,9 +169,9 @@ function Signup() {
             </button>
           </form>
 
-          <button type="button" className="demo-login-btn" onClick={handleQuickSignup}>
-            Demo: 1-Click Quick Signup
-          </button>
+          <p className="auth-note">
+            Account creation is completed via Google. Email/password sign-up is coming soon.
+          </p>
         </div>
       </main>
     </div>

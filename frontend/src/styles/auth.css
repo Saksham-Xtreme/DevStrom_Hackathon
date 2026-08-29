@@ -309,3 +309,44 @@
 .demo-login-btn:hover {
   background: #daf0e6;
 }
+
+.auth-error-banner {
+  background: var(--status-missed-bg, #fdecec);
+  border: 1px solid rgba(217, 67, 67, 0.25);
+  color: var(--status-missed-text, #d94343);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.auth-note {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.app-loading-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg, #fff);
+}
+
+.app-loading-spinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 3px solid var(--green-light, #daf0e6);
+  border-top-color: var(--green-primary, #107c56);
+  animation: app-spin 0.8s linear infinite;
+}
+
+@keyframes app-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
