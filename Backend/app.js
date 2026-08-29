@@ -1,11 +1,22 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
-
+const helmet = require("helmet");
+const passport = require("./src/config/passport");
+const authRoutes = require("./src/modules/auth/auth.routes");
 const app = express();
 
-app.use(cors({
-    origin: "http://localhost:5174"
-}));
+app.use(
+    cors({
+        origin: process.env.CLIENT_URL
+    })
+);
+
+app.use(passport.initialize());
+
+app.use(helmet());
+app.use("/api/auth", authRoutes);
 
 app.use(express.json());
 
@@ -15,8 +26,4 @@ app.get("/", (req, res) => {
     });
 });
 
-const PORT = 8080;
-
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+module.exports = app;

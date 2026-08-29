@@ -462,7 +462,7 @@ Reminder
 
 For example:
 
-```text
+```
 08:00
  ↓
 Take Medicine A
